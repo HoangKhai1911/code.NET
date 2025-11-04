@@ -269,6 +269,7 @@
             guna2TextBox1.ShadowDecoration.CustomizableEdges = customizableEdges22;
             guna2TextBox1.Size = new Size(350, 35);
             guna2TextBox1.TabIndex = 21;
+            guna2TextBox1.TextChanged += guna2TextBox1_TextChanged;
             // 
             // guna2HtmlLabel3
             // 
@@ -301,6 +302,7 @@
             guna2TextBox2.ShadowDecoration.CustomizableEdges = customizableEdges24;
             guna2TextBox2.Size = new Size(350, 35);
             guna2TextBox2.TabIndex = 23;
+            guna2TextBox2.TextChanged += guna2TextBox2_TextChanged;
             // 
             // guna2HtmlLabel4
             // 
@@ -319,6 +321,7 @@
             comboBox1.Name = "comboBox1";
             comboBox1.Size = new Size(186, 28);
             comboBox1.TabIndex = 25;
+            comboBox1.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
             // 
             // guna2HtmlLabel5
             // 
@@ -337,6 +340,7 @@
             comboBox2.Name = "comboBox2";
             comboBox2.Size = new Size(184, 28);
             comboBox2.TabIndex = 27;
+            comboBox2.SelectedIndexChanged += comboBox2_SelectedIndexChanged;
             // 
             // guna2PictureBox1
             // 
@@ -348,6 +352,7 @@
             guna2PictureBox1.Size = new Size(265, 149);
             guna2PictureBox1.TabIndex = 29;
             guna2PictureBox1.TabStop = false;
+            guna2PictureBox1.Click += guna2PictureBox1_Click;
             // 
             // openFileDialog1
             // 
@@ -363,6 +368,7 @@
             button1.TabIndex = 30;
             button1.Text = "Browse";
             button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
             // 
             // button2
             // 
@@ -372,6 +378,7 @@
             button2.TabIndex = 31;
             button2.Text = "Delete";
             button2.UseVisualStyleBackColor = true;
+            button2.Click += button2_Click;
             // 
             // guna2HtmlLabel7
             // 
@@ -410,6 +417,7 @@
             richTextBox1.Size = new Size(405, 76);
             richTextBox1.TabIndex = 42;
             richTextBox1.Text = "";
+            richTextBox1.TextChanged += richTextBox1_TextChanged;
             // 
             // guna2Button1
             // 
@@ -428,6 +436,7 @@
             guna2Button1.Size = new Size(142, 43);
             guna2Button1.TabIndex = 44;
             guna2Button1.Text = "Add";
+            guna2Button1.Click += guna2Button1_Click;
             // 
             // guna2Button2
             // 
@@ -446,6 +455,7 @@
             guna2Button2.Size = new Size(142, 43);
             guna2Button2.TabIndex = 45;
             guna2Button2.Text = "Delete";
+            guna2Button2.Click += guna2Button2_Click;
             // 
             // richTextBox2
             // 
@@ -454,6 +464,7 @@
             richTextBox2.Size = new Size(326, 340);
             richTextBox2.TabIndex = 46;
             richTextBox2.Text = "";
+            richTextBox2.TextChanged += richTextBox2_TextChanged;
             // 
             // frmAddRecipie
             // 

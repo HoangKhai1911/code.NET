@@ -1294,6 +1294,7 @@
             guna2Button7.ShadowDecoration.CustomizableEdges = customizableEdges36;
             guna2Button7.Size = new Size(93, 86);
             guna2Button7.TabIndex = 40;
+            guna2Button7.Click += guna2Button7_Click;
             // 
             // frmRecipes
             // 

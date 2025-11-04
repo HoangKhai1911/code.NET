@@ -68,8 +68,6 @@
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges38 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges39 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges40 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges41 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges42 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges43 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges44 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMyRecipes));
@@ -89,6 +87,8 @@
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges58 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges59 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges60 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges41 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges42 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             guna2GradientPanel1 = new Guna.UI2.WinForms.Guna2GradientPanel();
             guna2ControlBox14 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2ControlBox12 = new Guna.UI2.WinForms.Guna2ControlBox();
@@ -115,7 +115,6 @@
             panel1 = new Panel();
             panel2 = new Panel();
             guna2Button2 = new Guna.UI2.WinForms.Guna2Button();
-            guna2Button1 = new Guna.UI2.WinForms.Guna2Button();
             label45 = new Label();
             label44 = new Label();
             label8 = new Label();
@@ -182,6 +181,7 @@
             label43 = new Label();
             label46 = new Label();
             pictureBox5 = new PictureBox();
+            guna2Button1 = new Guna.UI2.WinForms.Guna2Button();
             guna2GradientPanel1.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
             panel1.SuspendLayout();
@@ -438,6 +438,7 @@
             guna2Button8.Size = new Size(142, 43);
             guna2Button8.TabIndex = 51;
             guna2Button8.Text = "Delete";
+            guna2Button8.Click += guna2Button8_Click;
             // 
             // guna2Button7
             // 
@@ -456,6 +457,7 @@
             guna2Button7.Size = new Size(142, 43);
             guna2Button7.TabIndex = 50;
             guna2Button7.Text = "Add";
+            guna2Button7.Click += guna2Button7_Click;
             // 
             // guna2Button6
             // 
@@ -474,6 +476,7 @@
             guna2Button6.Size = new Size(113, 36);
             guna2Button6.TabIndex = 49;
             guna2Button6.Text = "Search";
+            guna2Button6.Click += guna2Button6_Click;
             // 
             // guna2TextBox1
             // 
@@ -496,6 +499,7 @@
             guna2TextBox1.ShadowDecoration.CustomizableEdges = customizableEdges40;
             guna2TextBox1.Size = new Size(295, 45);
             guna2TextBox1.TabIndex = 48;
+            guna2TextBox1.TextChanged += guna2TextBox1_TextChanged;
             // 
             // label1
             // 
@@ -543,8 +547,8 @@
             // panel2
             // 
             panel2.BackColor = Color.White;
-            panel2.Controls.Add(guna2Button2);
             panel2.Controls.Add(guna2Button1);
+            panel2.Controls.Add(guna2Button2);
             panel2.Controls.Add(label45);
             panel2.Controls.Add(label44);
             panel2.Controls.Add(label8);
@@ -562,7 +566,7 @@
             // guna2Button2
             // 
             guna2Button2.BorderRadius = 20;
-            guna2Button2.CustomizableEdges = customizableEdges41;
+            guna2Button2.CustomizableEdges = customizableEdges43;
             guna2Button2.DisabledState.BorderColor = Color.DarkGray;
             guna2Button2.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button2.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -572,28 +576,11 @@
             guna2Button2.ForeColor = Color.White;
             guna2Button2.Location = new Point(172, 127);
             guna2Button2.Name = "guna2Button2";
-            guna2Button2.ShadowDecoration.CustomizableEdges = customizableEdges42;
+            guna2Button2.ShadowDecoration.CustomizableEdges = customizableEdges44;
             guna2Button2.Size = new Size(94, 32);
             guna2Button2.TabIndex = 60;
             guna2Button2.Text = "Delete";
-            // 
-            // guna2Button1
-            // 
-            guna2Button1.BorderRadius = 20;
-            guna2Button1.CustomizableEdges = customizableEdges43;
-            guna2Button1.DisabledState.BorderColor = Color.DarkGray;
-            guna2Button1.DisabledState.CustomBorderColor = Color.DarkGray;
-            guna2Button1.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
-            guna2Button1.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
-            guna2Button1.FillColor = Color.Orange;
-            guna2Button1.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            guna2Button1.ForeColor = Color.White;
-            guna2Button1.Location = new Point(89, 127);
-            guna2Button1.Name = "guna2Button1";
-            guna2Button1.ShadowDecoration.CustomizableEdges = customizableEdges44;
-            guna2Button1.Size = new Size(77, 32);
-            guna2Button1.TabIndex = 59;
-            guna2Button1.Text = "Edit";
+            guna2Button2.Click += guna2Button2_Click;
             // 
             // label45
             // 
@@ -604,6 +591,7 @@
             label45.Size = new Size(74, 23);
             label45.TabIndex = 8;
             label45.Text = "Medium";
+            label45.Click += label45_Click;
             // 
             // label44
             // 
@@ -624,6 +612,7 @@
             label8.Size = new Size(89, 23);
             label8.TabIndex = 6;
             label8.Text = "Fried food";
+            label8.Click += label8_Click;
             // 
             // label7
             // 
@@ -644,6 +633,7 @@
             label6.Size = new Size(64, 23);
             label6.TabIndex = 4;
             label6.Text = "30mins";
+            label6.Click += label6_Click;
             // 
             // label5
             // 
@@ -664,6 +654,7 @@
             label4.Size = new Size(114, 23);
             label4.TabIndex = 2;
             label4.Text = "Linh xinh dep";
+            label4.Click += label4_Click;
             // 
             // label2
             // 
@@ -674,6 +665,7 @@
             label2.Size = new Size(235, 25);
             label2.TabIndex = 1;
             label2.Text = "Canh ga chien nuoc mam";
+            label2.Click += label2_Click;
             // 
             // label3
             // 
@@ -695,6 +687,7 @@
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox1.TabIndex = 1;
             pictureBox1.TabStop = false;
+            pictureBox1.Click += pictureBox1_Click;
             // 
             // panel3
             // 
@@ -741,6 +734,7 @@
             guna2Button3.Size = new Size(94, 32);
             guna2Button3.TabIndex = 60;
             guna2Button3.Text = "Delete";
+            guna2Button3.Click += guna2Button3_Click;
             // 
             // guna2Button4
             // 
@@ -759,6 +753,7 @@
             guna2Button4.Size = new Size(77, 32);
             guna2Button4.TabIndex = 59;
             guna2Button4.Text = "Edit";
+            guna2Button4.Click += guna2Button4_Click;
             // 
             // label9
             // 
@@ -906,6 +901,7 @@
             guna2Button5.Size = new Size(94, 32);
             guna2Button5.TabIndex = 60;
             guna2Button5.Text = "Delete";
+            guna2Button5.Click += guna2Button5_Click;
             // 
             // guna2Button9
             // 
@@ -924,6 +920,7 @@
             guna2Button9.Size = new Size(77, 32);
             guna2Button9.TabIndex = 59;
             guna2Button9.Text = "Edit";
+            guna2Button9.Click += guna2Button9_Click;
             // 
             // label18
             // 
@@ -1071,6 +1068,7 @@
             guna2Button10.Size = new Size(94, 32);
             guna2Button10.TabIndex = 60;
             guna2Button10.Text = "Delete";
+            guna2Button10.Click += guna2Button10_Click;
             // 
             // guna2Button11
             // 
@@ -1089,6 +1087,7 @@
             guna2Button11.Size = new Size(77, 32);
             guna2Button11.TabIndex = 59;
             guna2Button11.Text = "Edit";
+            guna2Button11.Click += guna2Button11_Click;
             // 
             // label27
             // 
@@ -1236,6 +1235,7 @@
             guna2Button12.Size = new Size(94, 32);
             guna2Button12.TabIndex = 60;
             guna2Button12.Text = "Delete";
+            guna2Button12.Click += guna2Button12_Click;
             // 
             // guna2Button13
             // 
@@ -1254,6 +1254,7 @@
             guna2Button13.Size = new Size(77, 32);
             guna2Button13.TabIndex = 59;
             guna2Button13.Text = "Edit";
+            guna2Button13.Click += guna2Button13_Click;
             // 
             // label36
             // 
@@ -1356,6 +1357,25 @@
             pictureBox5.TabIndex = 1;
             pictureBox5.TabStop = false;
             // 
+            // guna2Button1
+            // 
+            guna2Button1.BorderRadius = 20;
+            guna2Button1.CustomizableEdges = customizableEdges41;
+            guna2Button1.DisabledState.BorderColor = Color.DarkGray;
+            guna2Button1.DisabledState.CustomBorderColor = Color.DarkGray;
+            guna2Button1.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
+            guna2Button1.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
+            guna2Button1.FillColor = Color.Orange;
+            guna2Button1.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            guna2Button1.ForeColor = Color.White;
+            guna2Button1.Location = new Point(89, 127);
+            guna2Button1.Name = "guna2Button1";
+            guna2Button1.ShadowDecoration.CustomizableEdges = customizableEdges42;
+            guna2Button1.Size = new Size(77, 32);
+            guna2Button1.TabIndex = 61;
+            guna2Button1.Text = "Edit";
+            guna2Button1.Click += guna2Button1_Click_1;
+            // 
             // frmMyRecipes
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -1427,7 +1447,7 @@
         private Panel panel1;
         private Panel panel2;
         private Guna.UI2.WinForms.Guna2Button guna2Button2;
-        private Guna.UI2.WinForms.Guna2Button guna2Button1;
+        //private Guna.UI2.WinForms.Guna2Button guna2Button1_Click;
         private Label label45;
         private Label label44;
         private Label label8;
@@ -1494,5 +1514,6 @@
         private Label label43;
         private Label label46;
         private PictureBox pictureBox5;
+        private Guna.UI2.WinForms.Guna2Button guna2Button1;
     }
 }
