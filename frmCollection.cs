@@ -16,5 +16,10 @@ namespace WinCook
         {
             InitializeComponent();
         }
+
+        private void frmCollection_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

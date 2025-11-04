@@ -464,7 +464,7 @@
             guna2Button7.FillColor = Color.Transparent;
             guna2Button7.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             guna2Button7.ForeColor = Color.Black;
-            guna2Button7.Location = new Point(12, 44);
+            guna2Button7.Location = new Point(46, 44);
             guna2Button7.Name = "guna2Button7";
             guna2Button7.ShadowDecoration.CustomizableEdges = customizableEdges34;
             guna2Button7.Size = new Size(84, 32);

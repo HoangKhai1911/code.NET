@@ -16,5 +16,15 @@ namespace WinCook
         {
             InitializeComponent();
         }
+
+        private void panel12_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void panel10_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }

@@ -16,5 +16,19 @@ namespace WinCook
         {
             InitializeComponent();
         }
+
+        private void pictureBox5_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void panel10_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }
