@@ -1,4 +1,5 @@
-﻿namespace WinCook
+﻿//frmHomePage.Designer.cs
+namespace WinCook
 {
     partial class frmHomePage
     {

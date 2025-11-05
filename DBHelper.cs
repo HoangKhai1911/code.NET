@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿//DBHelper.cs
+using System.Configuration;
 
 namespace WinCook
 {
