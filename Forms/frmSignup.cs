@@ -15,9 +15,26 @@ namespace WinCook
         public frmSignup()
         {
             InitializeComponent();
+            guna2Button1.Click += BtnSignUp_Click;        // "Sign up" button
+            linkLabel1.LinkClicked += LinkLabel1_LinkClicked; // "Go to log in" link
         }
 
         private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void guna2Button1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void guna2TextBox2_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void guna2TextBox3_TextChanged(object sender, EventArgs e)
         {
 
         }
