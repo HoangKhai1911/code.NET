@@ -1,4 +1,6 @@
-﻿using System;
+﻿//frmRecipes.cs
+//co chuc nang 10 cua phuc
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -209,15 +211,18 @@ namespace WinCook
         }
 
         // Tạm thời: click card chỉ show ID, sau này ta mở frmRecipeDetails
+        // Mở màn hình chi tiết thay vì MessageBox
         private void RecipeCard_Click(object? sender, EventArgs e)
         {
-            if (sender is Control c && c.Tag != null)
+            if (sender is Control c && c.Tag != null && int.TryParse(c.Tag.ToString(), out int recipeId))
             {
-                int recipeId = Convert.ToInt32(c.Tag);
-                MessageBox.Show("Bạn đã chọn công thức ID = " + recipeId,
-                    "Recipe", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                using (var f = new frmRecipeDetails(recipeId))
+                {
+                    f.ShowDialog(this);
+                }
             }
         }
+
 
         // ====== CÁC EVENT CŨ (GIỮ NGUYÊN) ======
 

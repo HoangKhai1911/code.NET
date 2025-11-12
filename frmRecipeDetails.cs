@@ -1,4 +1,6 @@
-﻿using Guna.UI2.WinForms;
+﻿//frmRecipeDetails.cs
+//co chuc nang 10 cua phuc
+using Guna.UI2.WinForms;
 using System;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -10,6 +12,33 @@ namespace WinCook
     public partial class frmRecipeDetails : Form
     {
         private int recipeId;
+        // Mở form quản lý nguyên liệu và refresh lại sau khi đóng
+        private void OpenIngredientManager(object? sender, EventArgs e)
+        {
+            using (var f = new frmIngredients(recipeId))
+            {
+                f.ShowDialog(this);
+                // Sau khi đóng: nạp lại danh sách nguyên liệu để hiển thị tức thì
+                try
+                {
+                    using (var conn = new SqlConnection(DBHelper.ConnectionString))
+                    {
+                        conn.Open();
+                        var daIngredients = new SqlDataAdapter(
+                            "SELECT name, quantity FROM Ingredients WHERE recipe_id=@id",
+                            conn
+                        );
+                        daIngredients.SelectCommand.Parameters.AddWithValue("@id", recipeId);
+                        var dtIngredients = new DataTable();
+                        daIngredients.Fill(dtIngredients);
+                        guna2HtmlLabel12.Text = dtIngredients.Rows.Count > 0
+                            ? string.Join("\n", dtIngredients.AsEnumerable().Select(x => $"{x["name"]} - {x["quantity"]}"))
+                            : "(Không có nguyên liệu)";
+                    }
+                }
+                catch { /* ignore, giữ yên UI nếu lỗi */ }
+            }
+        }
 
         public frmRecipeDetails(int id)
         {
@@ -107,6 +136,10 @@ namespace WinCook
                     ? string.Join("\n\n", dtSteps.AsEnumerable().Select(x => $"{x["step_number"]}. {x["instruction"]}"))
                     : "(Chưa có bước làm)";
             }
+            // cuối LoadDetails()
+            guna2Panel2.DoubleClick -= OpenIngredientManager;  // tránh add duplicate handler
+            guna2Panel2.DoubleClick += OpenIngredientManager;
+
         }
     }
 }
