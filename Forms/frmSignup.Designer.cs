@@ -248,7 +248,8 @@
             guna2Button1.Size = new Size(265, 56);
             guna2Button1.TabIndex = 12;
             guna2Button1.Text = "Sign up";
-            guna2Button1.Click += guna2Button1_Click;
+            guna2Button1.Click += new System.EventHandler(this.BtnSignUp_Click);
+
             // 
             // label7
             // 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿//frmLogin.cs
+using System;
 using System.IO; // (using này không cần nữa, nhưng có thể giữ lại)
 using System.Windows.Forms;
 using WinCook.Models;   // <-- THÊM DÒNG NÀY

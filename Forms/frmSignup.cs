@@ -1,4 +1,5 @@
-﻿using System;
+﻿//frmSignup.cs
+using System;
 using System.Windows.Forms;
 using WinCook.Services; // THÊM DÒNG NÀY
 
@@ -17,7 +18,7 @@ namespace WinCook
             _userService = new UserService();
 
             // Các control này đã được định nghĩa trong file Designer của bạn
-            guna2Button1.Click += BtnSignUp_Click;       // "Sign up" button
+                 // "Sign up" button
             linkLabel1.LinkClicked += linkLabel1_LinkClicked; // "Go to log in" link
         }
 

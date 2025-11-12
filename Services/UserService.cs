@@ -1,9 +1,11 @@
-﻿using System;
+﻿//UserService.cs
+using System;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using System.Security.Cryptography;
 using System.Text;
 using WinCook.Models; // Thêm namespace của User model
+using System.Windows.Forms; // để dùng MessageBox cho debug
 
 namespace WinCook.Services
 {
@@ -33,6 +35,20 @@ namespace WinCook.Services
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
+                    // ===== DEBUG: xem app đang ghi vào đâu =====
+                    using (var who = new SqlCommand(
+                        "SELECT @@SERVERNAME AS Srv, DB_NAME() AS Db, SUSER_SNAME() AS LoginName", connection))
+                    using (var r = who.ExecuteReader())
+                    {
+                        if (r.Read())
+                        {
+                            MessageBox.Show(
+                                $"Server = {r["Srv"]}\nDB = {r["Db"]}\nLogin = {r["LoginName"]}\nConn = {connection.DataSource}",
+                                "Where am I writing?");
+                        }
+                    }
+                    // ===== END DEBUG =====
+
                     // Câu lệnh SQL để chèn người dùng mới
                     string query = "INSERT INTO Users (username, password_hash, email) VALUES (@username, @password_hash, @email)";
 
