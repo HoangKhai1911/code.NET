@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace WinCook.Models
 {
     /// <summary>
-    * Model cho bảng Notes(Ghi chú cá nhân)
+    //Model cho bảng Notes(Ghi chú cá nhân)
     /// </summary>
     public class Note
     {

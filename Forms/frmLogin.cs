@@ -22,7 +22,17 @@ namespace WinCook
             guna2Button1.Click += BtnLogin_Click;   // "Log in" button
             linkLabel1.LinkClicked += LinkLabel1_LinkClicked; // "Register" link
         }
+        // Designer gắn: Load += frmLogin_Load;
+        private void frmLogin_Load(object? sender, EventArgs e)
+        {
+            // TODO: khởi tạo form nếu cần
+        }
 
+        // Designer gắn: guna2TextBox1.TextChanged += guna2TextBox1_TextChanged;
+        private void guna2TextBox1_TextChanged(object? sender, EventArgs e)
+        {
+            // TODO: xử lý khi text thay đổi (nếu cần)
+        }
         private void BtnLogin_Click(object sender, EventArgs e)
         {
             // Lấy tên control từ code của bạn
