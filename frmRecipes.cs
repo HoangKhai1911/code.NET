@@ -23,7 +23,8 @@ namespace WinCook
 
         // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID ======
         // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID (CÓ TÌM KIẾM) ======
-        private void LoadRecipes(string? keyword = null)
+        private void LoadRecipes(string? keyword = null, int? categoryId = null)
+
         {
             // Xoá các item cũ (panel mẫu trong Designer) để hiển thị dữ liệu thật
             flowLayoutPanel1.Controls.Clear();
@@ -35,28 +36,39 @@ namespace WinCook
                 {
                     // Base query
                     var sql = @"
-                SELECT 
-                    r.recipe_id,
-                    r.title,
-                    r.difficulty,
-                    r.time_needed,
-                    c.name      AS category,
-                    u.username  AS author,
-                    r.image_url
-                FROM Recipes r
-                JOIN Users u ON r.user_id = u.user_id
-                LEFT JOIN Categories c ON r.category_id = c.category_id
-            ";
+    SELECT 
+        r.recipe_id,
+        r.title,
+        r.difficulty,
+        r.time_needed,
+        c.name      AS category,
+        u.username  AS author,
+        r.image_url
+    FROM Recipes r
+    JOIN Users u ON r.user_id = u.user_id
+    LEFT JOIN Categories c ON r.category_id = c.category_id
+";
 
-                    // Nếu có keyword => thêm WHERE
+                    var where = new List<string>();
+
                     if (!string.IsNullOrWhiteSpace(keyword))
                     {
-                        sql += " WHERE r.title LIKE @k";
+                        where.Add("r.title LIKE @k");
                         cmd.Parameters.Add("@k", SqlDbType.NVarChar, 255).Value = $"%{keyword}%";
                     }
 
+                    if (categoryId.HasValue && categoryId.Value > 0)
+                    {
+                        where.Add("r.category_id = @cat");
+                        cmd.Parameters.Add("@cat", SqlDbType.Int).Value = categoryId.Value;
+                    }
+
+                    if (where.Count > 0)
+                        sql += " WHERE " + string.Join(" AND ", where);
+
                     sql += " ORDER BY r.created_at DESC";
                     cmd.CommandText = sql;
+
 
                     conn.Open();
                     using (var reader = cmd.ExecuteReader())
@@ -74,6 +86,47 @@ namespace WinCook
                 MessageBox.Show("Lỗi khi tải danh sách công thức: " + ex.Message,
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+
+        private void LoadCategories()
+        {
+            try
+            {
+                using (var conn = new SqlConnection(DBHelper.ConnectionString))
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT category_id, name FROM Categories ORDER BY name";
+                    conn.Open();
+
+                    var dt = new DataTable();
+                    dt.Load(cmd.ExecuteReader());
+
+                    // Thêm dòng "Tất cả"
+                    var allRow = dt.NewRow();
+                    allRow["category_id"] = 0;   // 0 = không lọc
+                    allRow["name"] = "Tất cả";
+                    dt.Rows.InsertAt(allRow, 0);
+
+                    // Bind vào ComboBox (guna2ComboBox1)
+                    guna2ComboBox1.DisplayMember = "name";
+                    guna2ComboBox1.ValueMember = "category_id";
+                    guna2ComboBox1.DataSource = dt;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi tải danh mục: " + ex.Message,
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private int? GetSelectedCategoryId()
+        {
+            if (guna2ComboBox1.SelectedValue == null) return null;
+            if (int.TryParse(guna2ComboBox1.SelectedValue.ToString(), out int id))
+                return id == 0 ? (int?)null : id; // 0 = "Tất cả"
+            return null;
         }
 
         // Tạo 1 thẻ (card) hiển thị 1 công thức
@@ -221,13 +274,7 @@ namespace WinCook
 
             return card;
         }
-        // Click nút Search
-        private void guna2Button6_Click(object sender, EventArgs e)
-        {
-            var k = guna2TextBox1.Text.Trim();
-            LoadRecipes(string.IsNullOrEmpty(k) ? null : k);
-        }
-
+        
         // Nhấn Enter trong ô tìm kiếm
         private void guna2TextBox1_KeyDown(object sender, KeyEventArgs e)
         {
@@ -296,7 +343,19 @@ namespace WinCook
         // Khi form load, gọi LoadRecipes()
         private void frmRecipes_Load(object sender, EventArgs e)
         {
+            LoadCategories();
             LoadRecipes();
+        }
+
+        private void guna2ComboBox1_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            var k = string.IsNullOrWhiteSpace(guna2TextBox1.Text) ? null : guna2TextBox1.Text.Trim();
+            LoadRecipes(k, GetSelectedCategoryId());
+        }
+        private void guna2Button6_Click(object sender, EventArgs e)
+        {
+            var k = guna2TextBox1.Text.Trim();
+            LoadRecipes(string.IsNullOrEmpty(k) ? null : k, GetSelectedCategoryId());
         }
 
         private void guna2Button7_Click(object sender, EventArgs e)

@@ -161,6 +161,8 @@ namespace WinCook
             guna2Button6 = new Guna.UI2.WinForms.Guna2Button();
             guna2Button6.Click += guna2Button6_Click;
             guna2ComboBox1 = new Guna.UI2.WinForms.Guna2ComboBox();
+            this.guna2ComboBox1.SelectionChangeCommitted += new System.EventHandler(this.guna2ComboBox1_SelectionChangeCommitted);
+
             guna2HtmlLabel1 = new Guna.UI2.WinForms.Guna2HtmlLabel();
             guna2Button7 = new Guna.UI2.WinForms.Guna2Button();
             guna2GradientPanel1.SuspendLayout();
