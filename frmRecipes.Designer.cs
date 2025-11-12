@@ -156,8 +156,10 @@ namespace WinCook
             pictureBox6 = new PictureBox();
             panel13 = new Panel();
             guna2TextBox1 = new Guna.UI2.WinForms.Guna2TextBox();
+            guna2TextBox1.KeyDown += guna2TextBox1_KeyDown;
             pictureBox7 = new PictureBox();
             guna2Button6 = new Guna.UI2.WinForms.Guna2Button();
+            guna2Button6.Click += guna2Button6_Click;
             guna2ComboBox1 = new Guna.UI2.WinForms.Guna2ComboBox();
             guna2HtmlLabel1 = new Guna.UI2.WinForms.Guna2HtmlLabel();
             guna2Button7 = new Guna.UI2.WinForms.Guna2Button();

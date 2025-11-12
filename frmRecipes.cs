@@ -22,9 +22,10 @@ namespace WinCook
         }
 
         // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID ======
-        private void LoadRecipes()
+        // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID (CÓ TÌM KIẾM) ======
+        private void LoadRecipes(string? keyword = null)
         {
-            // Xoá các item cũ (panel1, panel3… mẫu trong Designer) để hiển thị dữ liệu thật
+            // Xoá các item cũ (panel mẫu trong Designer) để hiển thị dữ liệu thật
             flowLayoutPanel1.Controls.Clear();
 
             try
@@ -32,19 +33,30 @@ namespace WinCook
                 using (var conn = new SqlConnection(DBHelper.ConnectionString))
                 using (var cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"
-                        SELECT 
-                            r.recipe_id,
-                            r.title,
-                            r.difficulty,
-                            r.time_needed,
-                            c.name      AS category,
-                            u.username  AS author,
-                            r.image_url
-                        FROM Recipes r
-                        JOIN Users u ON r.user_id = u.user_id
-                        LEFT JOIN Categories c ON r.category_id = c.category_id
-                        ORDER BY r.created_at DESC";
+                    // Base query
+                    var sql = @"
+                SELECT 
+                    r.recipe_id,
+                    r.title,
+                    r.difficulty,
+                    r.time_needed,
+                    c.name      AS category,
+                    u.username  AS author,
+                    r.image_url
+                FROM Recipes r
+                JOIN Users u ON r.user_id = u.user_id
+                LEFT JOIN Categories c ON r.category_id = c.category_id
+            ";
+
+                    // Nếu có keyword => thêm WHERE
+                    if (!string.IsNullOrWhiteSpace(keyword))
+                    {
+                        sql += " WHERE r.title LIKE @k";
+                        cmd.Parameters.Add("@k", SqlDbType.NVarChar, 255).Value = $"%{keyword}%";
+                    }
+
+                    sql += " ORDER BY r.created_at DESC";
+                    cmd.CommandText = sql;
 
                     conn.Open();
                     using (var reader = cmd.ExecuteReader())
@@ -208,6 +220,22 @@ namespace WinCook
             card.Controls.Add(infoPanel);
 
             return card;
+        }
+        // Click nút Search
+        private void guna2Button6_Click(object sender, EventArgs e)
+        {
+            var k = guna2TextBox1.Text.Trim();
+            LoadRecipes(string.IsNullOrEmpty(k) ? null : k);
+        }
+
+        // Nhấn Enter trong ô tìm kiếm
+        private void guna2TextBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true; // chặn tiếng beep
+                guna2Button6.PerformClick();
+            }
         }
 
         // Tạm thời: click card chỉ show ID, sau này ta mở frmRecipeDetails
