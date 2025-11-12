@@ -34,18 +34,18 @@ namespace WinCook
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges15 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges16 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges5 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges6 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges7 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges8 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges9 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges10 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges11 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges12 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges13 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges14 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges7 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges8 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges17 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges18 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges19 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
@@ -61,12 +61,12 @@ namespace WinCook
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmHomePage));
             guna2ControlBox4 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2GradientPanel1 = new Guna.UI2.WinForms.Guna2GradientPanel();
+            guna2ControlBox6 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2ControlBox5 = new Guna.UI2.WinForms.Guna2ControlBox();
+            guna2ControlBox7 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2ControlBox3 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2ControlBox2 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2ControlBox1 = new Guna.UI2.WinForms.Guna2ControlBox();
-            guna2ControlBox6 = new Guna.UI2.WinForms.Guna2ControlBox();
-            guna2ControlBox7 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2Button2 = new Guna.UI2.WinForms.Guna2Button();
             guna2Button1 = new Guna.UI2.WinForms.Guna2Button();
             guna2Button4 = new Guna.UI2.WinForms.Guna2Button();
@@ -111,6 +111,19 @@ namespace WinCook
             guna2GradientPanel1.Size = new Size(946, 25);
             guna2GradientPanel1.TabIndex = 17;
             // 
+            // guna2ControlBox6
+            // 
+            guna2ControlBox6.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            guna2ControlBox6.ControlBoxType = Guna.UI2.WinForms.Enums.ControlBoxType.MinimizeBox;
+            guna2ControlBox6.CustomizableEdges = customizableEdges3;
+            guna2ControlBox6.FillColor = Color.FromArgb(139, 152, 166);
+            guna2ControlBox6.IconColor = Color.White;
+            guna2ControlBox6.Location = new Point(889, -2);
+            guna2ControlBox6.Name = "guna2ControlBox6";
+            guna2ControlBox6.ShadowDecoration.CustomizableEdges = customizableEdges4;
+            guna2ControlBox6.Size = new Size(31, 27);
+            guna2ControlBox6.TabIndex = 18;
+            // 
             // guna2ControlBox5
             // 
             guna2ControlBox5.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -123,6 +136,19 @@ namespace WinCook
             guna2ControlBox5.ShadowDecoration.CustomizableEdges = customizableEdges6;
             guna2ControlBox5.Size = new Size(31, 27);
             guna2ControlBox5.TabIndex = 17;
+            // 
+            // guna2ControlBox7
+            // 
+            guna2ControlBox7.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            guna2ControlBox7.BackColor = Color.Transparent;
+            guna2ControlBox7.CustomizableEdges = customizableEdges7;
+            guna2ControlBox7.FillColor = Color.FromArgb(139, 152, 166);
+            guna2ControlBox7.IconColor = Color.White;
+            guna2ControlBox7.Location = new Point(912, -2);
+            guna2ControlBox7.Name = "guna2ControlBox7";
+            guna2ControlBox7.ShadowDecoration.CustomizableEdges = customizableEdges8;
+            guna2ControlBox7.Size = new Size(34, 27);
+            guna2ControlBox7.TabIndex = 19;
             // 
             // guna2ControlBox3
             // 
@@ -162,32 +188,6 @@ namespace WinCook
             guna2ControlBox1.ShadowDecoration.CustomizableEdges = customizableEdges14;
             guna2ControlBox1.Size = new Size(28, 25);
             guna2ControlBox1.TabIndex = 6;
-            // 
-            // guna2ControlBox6
-            // 
-            guna2ControlBox6.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            guna2ControlBox6.ControlBoxType = Guna.UI2.WinForms.Enums.ControlBoxType.MinimizeBox;
-            guna2ControlBox6.CustomizableEdges = customizableEdges3;
-            guna2ControlBox6.FillColor = Color.FromArgb(139, 152, 166);
-            guna2ControlBox6.IconColor = Color.White;
-            guna2ControlBox6.Location = new Point(889, -2);
-            guna2ControlBox6.Name = "guna2ControlBox6";
-            guna2ControlBox6.ShadowDecoration.CustomizableEdges = customizableEdges4;
-            guna2ControlBox6.Size = new Size(31, 27);
-            guna2ControlBox6.TabIndex = 18;
-            // 
-            // guna2ControlBox7
-            // 
-            guna2ControlBox7.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            guna2ControlBox7.BackColor = Color.Transparent;
-            guna2ControlBox7.CustomizableEdges = customizableEdges7;
-            guna2ControlBox7.FillColor = Color.FromArgb(139, 152, 166);
-            guna2ControlBox7.IconColor = Color.White;
-            guna2ControlBox7.Location = new Point(912, -2);
-            guna2ControlBox7.Name = "guna2ControlBox7";
-            guna2ControlBox7.ShadowDecoration.CustomizableEdges = customizableEdges8;
-            guna2ControlBox7.Size = new Size(34, 27);
-            guna2ControlBox7.TabIndex = 19;
             // 
             // guna2Button2
             // 
@@ -345,6 +345,7 @@ namespace WinCook
             guna2Button6.Size = new Size(238, 58);
             guna2Button6.TabIndex = 41;
             guna2Button6.Text = "Go!";
+            guna2Button6.Click += this.guna2Button6_Click_1;
             // 
             // frmHomePage
             // 

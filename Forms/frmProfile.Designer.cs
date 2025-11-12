@@ -380,6 +380,7 @@
             guna2Button2.ShadowDecoration.CustomizableEdges = customizableEdges24;
             guna2Button2.Size = new Size(59, 44);
             guna2Button2.TabIndex = 51;
+            guna2Button2.Click += guna2Button2_Click;
             // 
             // guna2Button4
             // 

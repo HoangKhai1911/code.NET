@@ -142,6 +142,7 @@
             guna2TextBox1.ShadowDecoration.CustomizableEdges = customizableEdges2;
             guna2TextBox1.Size = new Size(488, 60);
             guna2TextBox1.TabIndex = 5;
+            guna2TextBox1.TextChanged += guna2TextBox1_TextChanged;
             // 
             // guna2TextBox2
             // 
@@ -272,6 +273,7 @@
             linkLabel1.TabIndex = 14;
             linkLabel1.TabStop = true;
             linkLabel1.Text = "Go to log in";
+            linkLabel1.LinkClicked += linkLabel1_LinkClicked;
             // 
             // guna2GradientPanel1
             // 

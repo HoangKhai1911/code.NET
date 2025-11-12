@@ -6,7 +6,19 @@ using System.Threading.Tasks;
 
 namespace WinCook.Models
 {
-    internal class Rating
+    /// <summary>
+    /// Model cho bảng Ratings
+    /// </summary>
+    public class Rating
     {
+        public int RatingId { get; set; }
+        public int UserId { get; set; }
+        public int RecipeId { get; set; }
+        public int Score { get; set; }
+        public string Comment { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        // Bổ sung: Tên người đánh giá
+        public string Username { get; set; }
     }
 }
