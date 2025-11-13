@@ -1,8 +1,8 @@
-﻿using System;
+﻿//Forms/frmAdd-EditRecipie.cs
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using Microsoft.Data.SqlClient;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -10,15 +10,18 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.SqlClient;
+using WinCook.Services;
+using WinCook.Models;
 
 namespace WinCook
 {
     public partial class frmAddRecipie : Form
     {
         private int? recipeId = null; // null = thêm mới, khác null = chỉnh sửa
-        private int currentUserId = 1; // giả định user ID hiện tại, sau này thay bằng user đăng nhập
-        private string connectionString = "Data Source=.;Initial Catalog=WinCook;Integrated Security=True";
+        private int currentUserId = 3; // sau này thay bằng AuthManager.CurrentUser.UserId
+        private string connectionString = DBHelper.ConnectionString;
         private string imagePath = null;
+
 
         public frmAddRecipie(int? id = null)
         {
@@ -29,11 +32,7 @@ namespace WinCook
             LoadLevels();
             LoadCategories();
 
-            // Gán sự kiện
-            guna2Button1.Click += guna2Button1_Click;  // nút lưu
-            guna2Button2.Click += guna2Button2_Click;  // nút thoát
-            button1.Click += button1_Click;            // nút chọn ảnh
-            button2.Click += button2_Click;            // nút xóa ảnh
+                      // nút xóa ảnh
 
             if (recipeId != null)
             {
@@ -50,7 +49,8 @@ namespace WinCook
 
         private void LoadRecipeForEdit()
         {
-            using (var conn = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
+            using (var conn = new Microsoft.Data.SqlClient.SqlConnection(DBHelper.ConnectionString)
+)
             {
                 conn.Open();
                 var cmd = new Microsoft.Data.SqlClient.SqlCommand(@"
@@ -86,7 +86,8 @@ namespace WinCook
         {
             try
             {
-                using (var conn = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
+                using (var conn = new Microsoft.Data.SqlClient.SqlConnection(DBHelper.ConnectionString)
+)
                 {
                     conn.Open();
                     var da = new Microsoft.Data.SqlClient.SqlDataAdapter("SELECT name FROM Categories", conn);
@@ -145,7 +146,8 @@ namespace WinCook
                 savedImagePath = dest;
             }
 
-            using (var conn = new Microsoft.Data.SqlClient.SqlConnection(connectionString))
+            using (var conn = new Microsoft.Data.SqlClient.SqlConnection(DBHelper.ConnectionString)
+)
             {
                 conn.Open();
                 Microsoft.Data.SqlClient.SqlCommand cmd;

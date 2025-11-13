@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Services/RecipeService.cs
+using System;
 using System.Collections.Generic;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -151,6 +152,53 @@ namespace WinCook.Services
             {
                 Console.WriteLine("Lỗi khi lấy tất cả công thức: " + ex.Message);
             }
+            return recipes;
+        }
+        /// <summary>
+        /// Lấy tất cả công thức của 1 user (dùng cho màn My Recipes).
+        /// </summary>
+        public List<Recipe> GetRecipesByUser(int userId)
+        {
+            List<Recipe> recipes = new List<Recipe>();
+
+            string query = @"
+                SELECT 
+                    r.recipe_id, r.title, r.difficulty, r.time_needed, r.image_url,
+                    u.username AS AuthorName, 
+                    c.name AS CategoryName,
+                    ISNULL(rs.total_favorites, 0) AS TotalFavorites,
+                    ISNULL(rs.avg_rating, 0) AS AverageRating
+                FROM Recipes r
+                JOIN Users u ON r.user_id = u.user_id
+                LEFT JOIN Categories c ON r.category_id = c.category_id
+                LEFT JOIN Recipe_Stats rs ON r.recipe_id = rs.recipe_id
+                WHERE r.user_id = @user_id
+                ORDER BY r.created_at DESC";
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@user_id", userId);
+
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                recipes.Add(MapRecipeFromReader(reader));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi khi lấy danh sách công thức theo user: " + ex.Message);
+            }
+
             return recipes;
         }
 

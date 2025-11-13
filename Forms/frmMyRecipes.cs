@@ -1,12 +1,22 @@
-﻿using Microsoft.Data.SqlClient;
-using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
+using WinCook.Models;
+using WinCook.Services;
 
 namespace WinCook
 {
     public partial class frmMyRecipes : Form
     {
-        private readonly string connectionString = "Data Source=.;Initial Catalog=WinCook;Integrated Security=True";
-        private readonly int currentUserId = 1; // sau này thay bằng user đăng nhập thực tế
+        // Dùng chung RecipeService + AuthManager
+        private readonly RecipeService _recipeService = new RecipeService();
+
+        // Lấy UserId hiện tại: nếu chưa login thì tạm dùng 1 (demo)
+        private int CurrentUserId => AuthManager.IsLoggedIn
+            ? AuthManager.CurrentUser.UserId
+            : 1;
 
         public frmMyRecipes()
         {
@@ -15,8 +25,8 @@ namespace WinCook
             // Khi form load thì hiển thị danh sách công thức
             this.Load += (s, e) => LoadMyRecipes();
 
-            // Gán sự kiện cho nút thêm công thức
-            guna2Button7.Click += guna2Button7_Click;
+            // Nút Add: Designer đã gán sẵn Click += guna2Button7_Click;
+            // nên ở đây KHÔNG cần gán lại để tránh chạy 2 lần.
         }
 
         // 🟢 Hàm hiển thị danh sách công thức
@@ -24,195 +34,255 @@ namespace WinCook
         {
             flowLayoutPanel1.Controls.Clear();
 
-            try
+            // Lấy danh sách công thức của user hiện tại
+            List<Recipe> recipes = _recipeService.GetRecipesByUser(CurrentUserId);
+
+            if (recipes == null || recipes.Count == 0)
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                Label noDataLabel = new Label
                 {
-                    conn.Open();
-                    SqlDataAdapter da = new SqlDataAdapter(@"
-                        SELECT r.recipe_id, r.title, r.image_url, c.name AS category_name
-                        FROM Recipes r
-                        LEFT JOIN Categories c ON r.category_id = c.category_id
-                        WHERE r.user_id = @uid
-                        ORDER BY r.updated_at DESC", conn);
+                    Text = "Chưa có công thức nào!",
+                    Dock = DockStyle.Fill,
+                    Font = new Font("Segoe UI", 12, FontStyle.Italic),
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    ForeColor = Color.Gray
+                };
+                flowLayoutPanel1.Controls.Add(noDataLabel);
+                return;
+            }
 
-                    da.SelectCommand.Parameters.AddWithValue("@uid", currentUserId);
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
+            foreach (var recipe in recipes)
+            {
+                // ==== Tạo card giống layout mẫu ====
 
-                    if (dt.Rows.Count == 0)
+                // Panel ngoài chứa cả hình + phần thông tin
+                Panel card = new Panel
+                {
+                    Width = 275,
+                    Height = 366,
+                    Margin = new Padding(20, 10, 0, 10),
+                };
+
+                // Ảnh món ăn
+                PictureBox pic = new PictureBox
+                {
+                    Location = new Point(0, 3),
+                    Size = new Size(278, 199),
+                    SizeMode = PictureBoxSizeMode.StretchImage,
+                    BackgroundImageLayout = ImageLayout.Zoom
+                };
+
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(recipe.ImageUrl) && File.Exists(recipe.ImageUrl))
                     {
-                        Label noDataLabel = new Label
-                        {
-                            Text = "Chưa có công thức nào!",
-                            Dock = DockStyle.Fill,
-                            Font = new Font("Segoe UI", 12, FontStyle.Italic),
-                            TextAlign = ContentAlignment.MiddleCenter,
-                            ForeColor = Color.Gray
-                        };
-                        flowLayoutPanel1.Controls.Add(noDataLabel);
-                        return;
+                        pic.Image = Image.FromFile(recipe.ImageUrl);
                     }
-
-                    foreach (DataRow row in dt.Rows)
+                    else
                     {
-                        int recipeId = Convert.ToInt32(row["recipe_id"]);
-                        string title = row["title"].ToString();
-                        string category = row["category_name"]?.ToString() ?? "Không có danh mục";
-                        string imagePath = row["image_url"]?.ToString();
-
-                        // 🟫 Tạo panel card
-                        Panel card = new Panel
-                        {
-                            Width = 260,
-                            Height = 330,
-                            Margin = new Padding(10),
-                            BorderStyle = BorderStyle.FixedSingle,
-                            BackColor = Color.WhiteSmoke
-                        };
-
-                        // 🟦 Hình món ăn
-                        PictureBox pic = new PictureBox
-                        {
-                            Width = 260,
-                            Height = 160,
-                            Dock = DockStyle.Top,
-                            SizeMode = PictureBoxSizeMode.Zoom,
-                            BackColor = Color.White
-                        };
-                        try
-                        {
-                            if (!string.IsNullOrEmpty(imagePath) && File.Exists(imagePath))
-                                pic.Image = Image.FromFile(imagePath);
-                            else
-                                pic.Image = Properties.Resources.no_image;
-                        }
-                        catch
-                        {
-                            pic.Image = Properties.Resources.no_image;
-                        }
-
-                        // 🟨 Tiêu đề món ăn
-                        Label lblTitle = new Label
-                        {
-                            Text = title,
-                            Dock = DockStyle.Top,
-                            Height = 40,
-                            Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                            TextAlign = ContentAlignment.MiddleCenter,
-                            ForeColor = Color.Black
-                        };
-
-                        // 🟩 Danh mục
-                        Label lblCategory = new Label
-                        {
-                            Text = "Danh mục: " + category,
-                            Dock = DockStyle.Top,
-                            Height = 25,
-                            Font = new Font("Segoe UI", 9, FontStyle.Italic),
-                            TextAlign = ContentAlignment.MiddleCenter,
-                            ForeColor = Color.DimGray
-                        };
-
-                        // 🔵 Nút chi tiết
-                        Button btnView = new Button
-                        {
-                            Text = "Chi tiết",
-                            Height = 30,
-                            Dock = DockStyle.Bottom,
-                            BackColor = Color.LightSteelBlue,
-                            FlatStyle = FlatStyle.Flat
-                        };
-                        btnView.Click += (s, e) =>
-                        {
-                            frmRecipeDetails detailForm = new frmRecipeDetails(recipeId);
-                            detailForm.ShowDialog();
-                        };
-
-                        // 🟢 Nút sửa
-                        Button btnEdit = new Button
-                        {
-                            Text = "Edit",
-                            Height = 30,
-                            Dock = DockStyle.Bottom,
-                            BackColor = Color.LightGreen,
-                            FlatStyle = FlatStyle.Flat
-                        };
-                        btnEdit.Click += (s, e) =>
-                        {
-                            frmAddRecipie editForm = new frmAddRecipie(recipeId);
-                            editForm.ShowDialog();
-                            LoadMyRecipes();
-                        };
-
-                        // 🔴 Nút xóa
-                        Button btnDelete = new Button
-                        {
-                            Text = "Delete",
-                            Height = 30,
-                            Dock = DockStyle.Bottom,
-                            BackColor = Color.LightCoral,
-                            FlatStyle = FlatStyle.Flat
-                        };
-                        btnDelete.Click += (s, e) =>
-                        {
-                            if (MessageBox.Show("Bạn có chắc muốn xóa công thức này?", "Xác nhận xóa",
-                                MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
-                            {
-                                DeleteRecipe(recipeId);
-                                LoadMyRecipes();
-                            }
-                        };
-
-                        // 🧩 Thêm các control vào card
-                        card.Controls.Add(btnDelete);
-                        card.Controls.Add(btnEdit);
-                        card.Controls.Add(btnView);
-                        card.Controls.Add(lblCategory);
-                        card.Controls.Add(lblTitle);
-                        card.Controls.Add(pic);
-
-                        // 🧊 Thêm card vào danh sách
-                        flowLayoutPanel1.Controls.Add(card);
+                        pic.Image = Properties.Resources.no_image;
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khi tải danh sách công thức: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                catch
+                {
+                    pic.Image = Properties.Resources.no_image;
+                }
+
+                // Panel trắng phía dưới chứa text + nút Edit/Delete
+                Panel infoPanel = new Panel
+                {
+                    BackColor = Color.White,
+                    Location = new Point(0, 202),
+                    Size = new Size(278, 164)
+                };
+
+                // ===== Các label giống file Designer =====
+
+                // Tiêu đề món
+                Label lblTitle = new Label
+                {
+                    AutoSize = true,
+                    Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                    Location = new Point(18, -2),
+                    Text = recipe.Title
+                };
+
+                // "Author :" + tên tác giả
+                Label lblAuthorCaption = new Label
+                {
+                    AutoSize = true,
+                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
+                    Location = new Point(18, 23),
+                    Text = "Author :"
+                };
+
+                Label lblAuthor = new Label
+                {
+                    AutoSize = true,
+                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
+                    Location = new Point(84, 23),
+                    Text = string.IsNullOrWhiteSpace(recipe.AuthorName)
+                        ? "Unknown"
+                        : recipe.AuthorName
+                };
+
+                // Thời gian
+                Label lblTimeCaption = new Label
+                {
+                    AutoSize = true,
+                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
+                    Location = new Point(18, 47),
+                    Text = "Time :"
+                };
+
+                Label lblTime = new Label
+                {
+                    AutoSize = true,
+                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
+                    Location = new Point(84, 46),
+                    Text = string.IsNullOrWhiteSpace(recipe.TimeNeeded)
+                        ? "N/A"
+                        : recipe.TimeNeeded
+                };
+
+                // Category
+                Label lblCateCaption = new Label
+                {
+                    AutoSize = true,
+                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
+                    Location = new Point(18, 68),
+                    Text = "Cate :"
+                };
+
+                Label lblCate = new Label
+                {
+                    AutoSize = true,
+                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
+                    Location = new Point(82, 71),
+                    Text = string.IsNullOrWhiteSpace(recipe.CategoryName)
+                        ? "Unknown"
+                        : recipe.CategoryName
+                };
+
+                // Level / Difficulty
+                Label lblLevelCaption = new Label
+                {
+                    AutoSize = true,
+                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
+                    Location = new Point(18, 91),
+                    Text = "Level : "
+                };
+
+                Label lblLevel = new Label
+                {
+                    AutoSize = true,
+                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
+                    Location = new Point(84, 92),
+                    Text = string.IsNullOrWhiteSpace(recipe.Difficulty)
+                        ? "N/A"
+                        : recipe.Difficulty
+                };
+
+                // ===== Nút Edit / Delete (dùng Button thường cho đơn giản) =====
+
+                Button btnEdit = new Button
+                {
+                    Text = "Edit",
+                    BackColor = Color.Orange,
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                    Size = new Size(77, 32),
+                    Location = new Point(89, 127)
+                };
+                btnEdit.FlatAppearance.BorderSize = 0;
+                btnEdit.Click += (s, e) =>
+                {
+                    var editForm = new frmAddRecipie(recipe.RecipeId);
+                    editForm.ShowDialog();
+                    // Sau khi sửa xong, load lại danh sách
+                    LoadMyRecipes();
+                };
+
+                Button btnDelete = new Button
+                {
+                    Text = "Delete",
+                    BackColor = Color.Brown,
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                    Size = new Size(94, 32),
+                    Location = new Point(172, 127)
+                };
+                btnDelete.FlatAppearance.BorderSize = 0;
+                btnDelete.Click += (s, e) =>
+                {
+                    if (MessageBox.Show("Bạn có chắc muốn xóa công thức này?",
+                            "Xác nhận xóa",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Warning) == DialogResult.Yes)
+                    {
+                        DeleteRecipe(recipe.RecipeId);
+                        LoadMyRecipes();
+                    }
+                };
+
+                // (Tuỳ chọn) click vào hình để xem chi tiết
+                pic.Cursor = Cursors.Hand;
+                pic.Click += (s, e) =>
+                {
+                    var detailForm = new frmRecipeDetails(recipe.RecipeId);
+                    detailForm.ShowDialog();
+                };
+
+                // Thêm control vào infoPanel
+                infoPanel.Controls.Add(btnEdit);
+                infoPanel.Controls.Add(btnDelete);
+                infoPanel.Controls.Add(lblLevel);
+                infoPanel.Controls.Add(lblLevelCaption);
+                infoPanel.Controls.Add(lblCate);
+                infoPanel.Controls.Add(lblCateCaption);
+                infoPanel.Controls.Add(lblTime);
+                infoPanel.Controls.Add(lblTimeCaption);
+                infoPanel.Controls.Add(lblAuthor);
+                infoPanel.Controls.Add(lblAuthorCaption);
+                infoPanel.Controls.Add(lblTitle);
+
+                // Thêm vào card
+                card.Controls.Add(infoPanel);
+                card.Controls.Add(pic);
+
+                // Thêm card vào flowLayoutPanel
+                flowLayoutPanel1.Controls.Add(card);
             }
         }
 
-        // 🗑️ Xóa công thức
+        // 🗑️ Xóa công thức – dùng RecipeService
         private void DeleteRecipe(int recipeId)
         {
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(connectionString))
-                {
-                    conn.Open();
-                    SqlCommand cmd = new SqlCommand("DELETE FROM Recipes WHERE recipe_id = @id", conn);
-                    cmd.Parameters.AddWithValue("@id", recipeId);
-                    cmd.ExecuteNonQuery();
-                }
+            bool success = _recipeService.DeleteRecipe(recipeId);
 
-                MessageBox.Show("Đã xóa công thức!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
+            if (success)
             {
-                MessageBox.Show("Lỗi khi xóa: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Đã xóa công thức!", "Thành công",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show("Không thể xóa công thức.", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        // ➕ Nút thêm công thức mới
+        // ➕ Nút thêm công thức mới (Add)
         private void guna2Button7_Click(object sender, EventArgs e)
         {
-            frmAddRecipie addForm = new frmAddRecipie();
+            var addForm = new frmAddRecipie();
             addForm.ShowDialog();
             LoadMyRecipes();
         }
 
-        // ⚙️ Các nút khác (chưa dùng)
+        // ⚙️ Các nút khác (chưa dùng) – giữ nguyên để không ảnh hưởng chỗ khác
         private void guna2Button8_Click(object sender, EventArgs e) { }
         private void guna2Button6_Click(object sender, EventArgs e) { }
         private void guna2TextBox1_TextChanged(object sender, EventArgs e) { }

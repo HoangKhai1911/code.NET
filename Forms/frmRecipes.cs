@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Forms/frmRecipes.cs
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -17,12 +18,56 @@ namespace WinCook
         public frmRecipes()
         {
             InitializeComponent();
+
         }
 
-        // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID ======
-        private void LoadRecipes()
+        // ===== Helper dùng chung để mở form khác =====
+        private void OpenForm(Form f)
         {
-            // Xoá các item cũ (panel1, panel3… mẫu trong Designer) để hiển thị dữ liệu thật
+            f.Show();
+            this.Hide();
+        }
+
+        // ===== Thanh menu trên cùng của frmRecipes =====
+
+        // Home
+        private void guna2Button1_Click(object sender, EventArgs e)
+        {
+            var f = new frmHomePage();
+            OpenForm(f);
+        }
+
+        // Recipes (đang ở Recipes rồi -> không làm gì)
+        private void guna2Button2_Click(object sender, EventArgs e)
+        {
+            // Đang ở Recipes, không cần chuyển
+        }
+
+        // Favorites
+        private void guna2Button5_Click(object sender, EventArgs e)
+        {
+            var f = new frmMyFavRecipes();
+            OpenForm(f);
+        }
+
+        // Collections
+        private void guna2Button3_Click(object sender, EventArgs e)
+        {
+            var f = new frmCollection();
+            OpenForm(f);
+        }
+
+        // Profiles
+        private void guna2Button4_Click(object sender, EventArgs e)
+        {
+            var f = new frmProfile();
+            OpenForm(f);
+        }
+        // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID ======
+        // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID (CÓ TÌM KIẾM) ======
+        private void LoadRecipes(string? keyword = null)
+        {
+            // Xoá các item cũ để hiển thị dữ liệu thật
             flowLayoutPanel1.Controls.Clear();
 
             try
@@ -30,19 +75,32 @@ namespace WinCook
                 using (var conn = new SqlConnection(DBHelper.ConnectionString))
                 using (var cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"
-                        SELECT 
-                            r.recipe_id,
-                            r.title,
-                            r.difficulty,
-                            r.time_needed,
-                            c.name      AS category,
-                            u.username  AS author,
-                            r.image_url
-                        FROM Recipes r
-                        JOIN Users u ON r.user_id = u.user_id
-                        LEFT JOIN Categories c ON r.category_id = c.category_id
-                        ORDER BY r.created_at DESC";
+                    // SQL cơ bản
+                    string sql = @"
+                SELECT 
+                    r.recipe_id,
+                    r.title,
+                    r.difficulty,
+                    r.time_needed,
+                    c.name      AS category,
+                    u.username  AS author,
+                    r.image_url
+                FROM Recipes r
+                JOIN Users u ON r.user_id = u.user_id
+                LEFT JOIN Categories c ON r.category_id = c.category_id
+            ";
+
+                    // Nếu có keyword -> thêm WHERE lọc theo title
+                    if (!string.IsNullOrWhiteSpace(keyword))
+                    {
+                        sql += " WHERE r.title LIKE @keyword";
+                        cmd.Parameters.AddWithValue("@keyword", "%" + keyword + "%");
+                    }
+
+                    // Sắp xếp món mới nhất lên trước
+                    sql += " ORDER BY r.created_at DESC";
+
+                    cmd.CommandText = sql;
 
                     conn.Open();
                     using (var reader = cmd.ExecuteReader())
@@ -62,12 +120,13 @@ namespace WinCook
             }
         }
 
+
         // Tạo 1 thẻ (card) hiển thị 1 công thức
         private Control BuildRecipeCard(SqlDataReader reader)
         {
             // --- panel chứa cả card ---
             var card = new Panel();
-            card.Width = 275;
+            card.Width = 240;
             card.Height = 323;
             card.Margin = new Padding(10);
             card.BackColor = Color.Transparent;
@@ -79,7 +138,7 @@ namespace WinCook
             // --- hình món ăn ---
             var pic = new PictureBox();
             pic.Location = new Point(0, 0);
-            pic.Size = new Size(275, 199);
+            pic.Size = new Size(card.Width, 199);
             pic.SizeMode = PictureBoxSizeMode.StretchImage;
             pic.Tag = recipeId;
 
@@ -106,7 +165,7 @@ namespace WinCook
             var infoPanel = new Panel();
             infoPanel.BackColor = Color.White;
             infoPanel.Location = new Point(0, 199);
-            infoPanel.Size = new Size(275, 120);
+            infoPanel.Size = new Size(card.Width, 120);
 
             // Title
             var lblTitle = new Label();
@@ -265,10 +324,35 @@ namespace WinCook
         {
             LoadRecipes();
         }
+        private void guna2Button6_Click(object sender, EventArgs e)
+        {
+            // Lấy keyword từ ô search
+            string keyword = guna2TextBox1.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                // Không nhập gì -> load toàn bộ
+                LoadRecipes();
+            }
+            else
+            {
+                // Có từ khoá -> load theo tên món
+                LoadRecipes(keyword);
+            }
+        }
 
         private void guna2Button7_Click(object sender, EventArgs e)
         {
+            // Mở form thêm / sửa công thức
+            using (var f = new frmAddRecipie())   // ✅ ĐÚNG TÊN FORM
+            {
+                f.ShowDialog();   // mở modal, nhập xong bấm Add sẽ đóng form
+            }
 
+            // Sau khi form đóng, load lại danh sách để thấy recipe mới
+            LoadRecipes();
         }
+
+
     }
 }

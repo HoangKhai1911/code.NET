@@ -1,4 +1,5 @@
-﻿namespace WinCook
+﻿//frmProfile.Designer.cs
+namespace WinCook
 {
     partial class frmProfile
     {
@@ -504,6 +505,14 @@
             ((System.ComponentModel.ISupportInitialize)chart2).EndInit();
             ResumeLayout(false);
             PerformLayout();
+            guna2Button7.Click += guna2Button7_Click;   // Home
+            guna2Button3.Click += guna2Button3_Click;   // Recipes
+            guna2Button6.Click += guna2Button6_Click;   // Favorites
+            guna2Button4.Click += guna2Button4_Click;   // Collections
+            guna2Button5.Click += guna2Button5_Click;   // Profiles
+                                                        // nút icon góc phải đã có:
+                                                        // guna2Button2.Click += guna2Button2_Click;
+
         }
 
         #endregion

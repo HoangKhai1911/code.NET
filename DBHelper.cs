@@ -1,4 +1,5 @@
-﻿public static class DBHelper
+﻿//DBHelper.cs
+public static class DBHelper
 {
     private static string connectionString =
         "Server=localhost\\SQLEXPRESS;Database=WinCook;Trusted_Connection=True;TrustServerCertificate=True";

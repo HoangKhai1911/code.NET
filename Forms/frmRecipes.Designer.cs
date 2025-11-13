@@ -1351,6 +1351,14 @@ namespace WinCook
             ((System.ComponentModel.ISupportInitialize)pictureBox7).EndInit();
             ResumeLayout(false);
             PerformLayout();
+            // ===== Gán sự kiện cho thanh menu top =====
+            guna2Button1.Click += guna2Button1_Click;   // Home
+            guna2Button2.Click += guna2Button2_Click;   // Recipes
+            guna2Button5.Click += guna2Button5_Click;   // Favorites
+            guna2Button3.Click += guna2Button3_Click;   // Collections
+            guna2Button4.Click += guna2Button4_Click;   // Profiles
+            guna2Button6.Click += guna2Button6_Click;   // Search theo tên món ăn
+
         }
 
         #endregion

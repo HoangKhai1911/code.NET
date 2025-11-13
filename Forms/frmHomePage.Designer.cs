@@ -206,6 +206,7 @@ namespace WinCook
             guna2Button2.Size = new Size(115, 32);
             guna2Button2.TabIndex = 33;
             guna2Button2.Text = "Recipes";
+            guna2Button2.Click += guna2Button2_Click;
             // 
             // guna2Button1
             // 
@@ -243,6 +244,7 @@ namespace WinCook
             guna2Button4.Size = new Size(108, 36);
             guna2Button4.TabIndex = 36;
             guna2Button4.Text = "Profiles";
+            guna2Button4.Click += guna2Button4_Click;
             // 
             // guna2Button3
             // 
@@ -261,6 +263,7 @@ namespace WinCook
             guna2Button3.Size = new Size(125, 36);
             guna2Button3.TabIndex = 35;
             guna2Button3.Text = "Collections";
+            guna2Button3.Click += guna2Button3_Click;
             // 
             // guna2Button5
             // 
@@ -279,6 +282,7 @@ namespace WinCook
             guna2Button5.Size = new Size(108, 36);
             guna2Button5.TabIndex = 34;
             guna2Button5.Text = "Favorites";
+            guna2Button5.Click += guna2Button5_Click;
             // 
             // guna2HtmlLabel1
             // 
@@ -345,7 +349,7 @@ namespace WinCook
             guna2Button6.Size = new Size(238, 58);
             guna2Button6.TabIndex = 41;
             guna2Button6.Text = "Go!";
-            guna2Button6.Click += this.guna2Button6_Click_1;
+            guna2Button6.Click += guna2Button6_Click_1;
             // 
             // frmHomePage
             // 
@@ -371,6 +375,9 @@ namespace WinCook
             guna2GradientPanel1.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
+            // nút Go! đã có:
+            // guna2Button6.Click += this.guna2Button6_Click_1;
+
         }
 
         #endregion

@@ -1,4 +1,5 @@
-﻿namespace WinCook
+﻿//frmCollection.Designer.cs
+namespace WinCook
 {
     partial class frmCollection
     {
@@ -828,6 +829,18 @@
             ((System.ComponentModel.ISupportInitialize)pictureBox7).EndInit();
             ResumeLayout(false);
             PerformLayout();
+            // Thanh menu
+            guna2Button1.Click += guna2Button1_Click;   // Home
+            guna2Button3.Click += guna2Button3_Click;   // Recipes
+            guna2Button5.Click += guna2Button5_Click;   // Favorites
+            guna2Button2.Click += guna2Button2_Click;   // Collections (current)
+            guna2Button4.Click += guna2Button4_Click;   // Profiles
+
+            // Các nút bên dưới
+            guna2Button6.Click += guna2Button6_Click;   // Search
+            guna2Button7.Click += guna2Button7_Click;   // Add
+            guna2Button8.Click += guna2Button8_Click;   // Delete
+
         }
 
         #endregion
