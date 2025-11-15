@@ -1358,6 +1358,8 @@ namespace WinCook
             guna2Button3.Click += guna2Button3_Click;   // Collections
             guna2Button4.Click += guna2Button4_Click;   // Profiles
             guna2Button6.Click += guna2Button6_Click;   // Search theo tên món ăn
+            guna2ComboBox1.SelectedIndexChanged += guna2ComboBox1_SelectedIndexChanged; // 🔹 lọc theo category
+
 
         }
 

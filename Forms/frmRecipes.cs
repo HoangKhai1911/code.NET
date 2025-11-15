@@ -65,7 +65,8 @@ namespace WinCook
         }
 
         // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID (CÓ TÌM KIẾM + YÊU THÍCH) ======
-        private void LoadRecipes(string? keyword = null)
+        // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID (CÓ TÌM KIẾM + YÊU THÍCH + LỌC CATEGORY) ======
+        private void LoadRecipes(string? keyword = null, string? categoryName = null)
         {
             // Xoá các item cũ để hiển thị dữ liệu thật
             flowLayoutPanel1.Controls.Clear();
@@ -103,13 +104,21 @@ JOIN Users u ON r.user_id = u.user_id
 LEFT JOIN Categories c ON r.category_id = c.category_id
 LEFT JOIN Favorites f 
     ON f.recipe_id = r.recipe_id AND f.user_id = @uid
+WHERE 1 = 1
 ";
 
                     // Nếu có keyword -> thêm WHERE lọc theo title
                     if (!string.IsNullOrWhiteSpace(keyword))
                     {
-                        sql += " WHERE r.title LIKE @keyword";
+                        sql += " AND r.title LIKE @keyword";
                         cmd.Parameters.AddWithValue("@keyword", "%" + keyword + "%");
+                    }
+
+                    // Nếu có categoryName (khác All) -> lọc theo tên category
+                    if (!string.IsNullOrWhiteSpace(categoryName) && categoryName != "All")
+                    {
+                        sql += " AND c.name = @cateName";
+                        cmd.Parameters.AddWithValue("@cateName", categoryName);
                     }
 
                     // Sắp xếp món mới nhất lên trước
@@ -137,6 +146,48 @@ LEFT JOIN Favorites f
             catch (Exception ex)
             {
                 MessageBox.Show("Lỗi khi tải danh sách công thức: " + ex.Message,
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // ====== LOAD DANH SÁCH CATEGORY VÀO COMBOBOX ======
+        private void LoadCategoriesToCombo()
+        {
+            try
+            {
+                using (var conn = new SqlConnection(DBHelper.ConnectionString))
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
+SELECT name 
+FROM Categories
+ORDER BY name";
+
+                    conn.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        guna2ComboBox1.Items.Clear();
+                        guna2ComboBox1.Items.Add("All"); // chọn để xem tất cả
+
+                        while (reader.Read())
+                        {
+                            string name = reader["name"]?.ToString() ?? "";
+                            if (!string.IsNullOrWhiteSpace(name))
+                            {
+                                guna2ComboBox1.Items.Add(name);
+                            }
+                        }
+                    }
+                }
+
+                if (guna2ComboBox1.Items.Count > 0)
+                {
+                    guna2ComboBox1.SelectedIndex = 0; // mặc định All
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi tải danh sách Category: " + ex.Message,
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -421,26 +472,50 @@ END";
         }
 
         // Khi form load, gọi LoadRecipes()
+        // Khi form load, gọi LoadRecipes()
         private void frmRecipes_Load(object sender, EventArgs e)
         {
+            LoadCategoriesToCombo();  // 🔹 mới thêm
             LoadRecipes();
         }
+
 
         private void guna2Button6_Click(object sender, EventArgs e)
         {
             // Lấy keyword từ ô search
             string keyword = guna2TextBox1.Text.Trim();
-
             if (string.IsNullOrWhiteSpace(keyword))
+                keyword = null;
+
+            // Lấy category đang chọn
+            string categoryName = null;
+            if (guna2ComboBox1.SelectedItem != null)
             {
-                // Không nhập gì -> load toàn bộ
-                LoadRecipes();
+                var sel = guna2ComboBox1.SelectedItem.ToString();
+                if (!string.IsNullOrWhiteSpace(sel) && sel != "All")
+                    categoryName = sel;
             }
-            else
+
+            // Load theo cả keyword + category (nếu có)
+            LoadRecipes(keyword, categoryName);
+        }
+
+        private void guna2ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // mỗi lần đổi category thì lọc lại
+            string keyword = guna2TextBox1.Text.Trim();
+            if (string.IsNullOrWhiteSpace(keyword))
+                keyword = null;
+
+            string categoryName = null;
+            if (guna2ComboBox1.SelectedItem != null)
             {
-                // Có từ khoá -> load theo tên món
-                LoadRecipes(keyword);
+                var sel = guna2ComboBox1.SelectedItem.ToString();
+                if (!string.IsNullOrWhiteSpace(sel) && sel != "All")
+                    categoryName = sel;
             }
+
+            LoadRecipes(keyword, categoryName);
         }
 
         private void guna2Button7_Click(object sender, EventArgs e)
