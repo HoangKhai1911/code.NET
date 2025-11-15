@@ -1325,6 +1325,8 @@ namespace WinCook
             guna2Button15.Size = new Size(108, 36);
             guna2Button15.TabIndex = 62;
             guna2Button15.Text = "Favorites";
+            // 🔽 thêm dòng này để click Favorites không làm gì (đang ở Favorites rồi)
+            this.guna2Button15.Click += new System.EventHandler(this.guna2Button5_Click);
             // 
             // guna2Button16
             // 

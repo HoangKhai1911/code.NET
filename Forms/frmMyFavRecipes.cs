@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Forms/frmMyFavRecipes.cs
+using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
@@ -20,6 +21,29 @@ namespace WinCook
         {
             f.Show();
             this.Hide();
+        }
+        // Đánh dấu tab đang active trên thanh nav
+        private void HighlightNav()
+        {
+            // Reset tất cả về trạng thái "không chọn"
+            guna2Button13.FillColor = Color.Transparent; // Home
+            guna2Button13.ForeColor = Color.Black;
+
+            guna2Button14.FillColor = Color.Transparent; // Recipes
+            guna2Button14.ForeColor = Color.Black;
+
+            guna2Button15.FillColor = Color.Transparent; // Favorites
+            guna2Button15.ForeColor = Color.Black;
+
+            guna2Button16.FillColor = Color.Transparent; // Collections
+            guna2Button16.ForeColor = Color.Black;
+
+            guna2Button17.FillColor = Color.Transparent; // Profiles
+            guna2Button17.ForeColor = Color.Black;
+
+            // ✅ Đánh dấu Favorites là tab đang chọn
+            guna2Button15.FillColor = Color.DarkSalmon; // giống style Home ở form khác
+            guna2Button15.ForeColor = Color.White;
         }
 
         // ===== Thanh menu top =====
@@ -323,10 +347,13 @@ WHERE user_id = @uid AND recipe_id = @rid";
         }
 
         // Form load
+        // Form load
         private void frmMyFavRecipes_Load(object sender, EventArgs e)
         {
+            HighlightNav();   // ✅ set lại màu nav cho đúng
             LoadFavorites();
         }
+
 
         // Nút Search trên form Favorites (nếu có)
         private void guna2Button6_Click(object sender, EventArgs e)
