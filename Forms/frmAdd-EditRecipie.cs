@@ -18,7 +18,7 @@ namespace WinCook
     public partial class frmAddRecipie : Form
     {
         private int? recipeId = null; // null = thêm mới, khác null = chỉnh sửa
-        private int currentUserId = 3; // sau này thay bằng AuthManager.CurrentUser.UserId
+        
         private string connectionString = DBHelper.ConnectionString;
         private string imagePath = null;
 
@@ -134,6 +134,15 @@ namespace WinCook
                 return;
             }
 
+            // ✅ Lấy đúng user đang đăng nhập
+            if (!AuthManager.IsLoggedIn || AuthManager.CurrentUser == null)
+            {
+                MessageBox.Show("Vui lòng đăng nhập trước khi thêm công thức!",
+                    "Chưa đăng nhập", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            int userId = AuthManager.CurrentUser.UserId;
+
             // Sao chép ảnh vào thư mục /Images
             string savedImagePath = null;
             if (guna2PictureBox1.Tag != null)
@@ -146,8 +155,7 @@ namespace WinCook
                 savedImagePath = dest;
             }
 
-            using (var conn = new Microsoft.Data.SqlClient.SqlConnection(DBHelper.ConnectionString)
-)
+            using (var conn = new Microsoft.Data.SqlClient.SqlConnection(DBHelper.ConnectionString))
             {
                 conn.Open();
                 Microsoft.Data.SqlClient.SqlCommand cmd;
@@ -157,8 +165,8 @@ namespace WinCook
                     // ➕ Thêm mới (gọi stored procedure AddRecipe)
                     cmd = new Microsoft.Data.SqlClient.SqlCommand("AddRecipe", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@user_id", userId);
 
-                    cmd.Parameters.AddWithValue("@user_id", currentUserId);
                     cmd.Parameters.AddWithValue("@category_name", (object)categoryName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@title", title);
                     cmd.Parameters.AddWithValue("@difficulty", (object)difficulty ?? DBNull.Value);
