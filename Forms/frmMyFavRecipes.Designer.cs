@@ -435,11 +435,7 @@ namespace WinCook
             // 
             flowLayoutPanel1.Anchor = AnchorStyles.None;
             flowLayoutPanel1.AutoScroll = true;
-            flowLayoutPanel1.Controls.Add(panel1);
-            flowLayoutPanel1.Controls.Add(panel3);
-            flowLayoutPanel1.Controls.Add(panel5);
-            flowLayoutPanel1.Controls.Add(panel7);
-            flowLayoutPanel1.Controls.Add(panel9);
+            
             flowLayoutPanel1.Location = new Point(2, 161);
             flowLayoutPanel1.Margin = new Padding(20);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
@@ -1390,6 +1386,8 @@ namespace WinCook
             FormBorderStyle = FormBorderStyle.None;
             Name = "frmMyFavRecipes";
             Text = "frmMyFavRecipes";
+            this.Load += new System.EventHandler(this.frmMyFavRecipes_Load);
+            this.guna2Button6.Click += new System.EventHandler(this.guna2Button6_Click);
             guna2GradientPanel1.ResumeLayout(false);
             flowLayoutPanel1.ResumeLayout(false);
             panel1.ResumeLayout(false);

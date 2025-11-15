@@ -1,4 +1,4 @@
-﻿//Forms/frmRecipes.cs
+﻿// Forms/frmRecipes.cs
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,8 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Data.SqlClient;      //  dùng SqlConnection, SqlCommand
-using System.IO;                 // check tồn tại file ảnh
+using System.Data.SqlClient;      // dùng SqlConnection, SqlCommand
+using System.IO;                  // check tồn tại file ảnh
+using WinCook.Services;           // dùng AuthManager
 
 namespace WinCook
 {
@@ -18,7 +19,6 @@ namespace WinCook
         public frmRecipes()
         {
             InitializeComponent();
-
         }
 
         // ===== Helper dùng chung để mở form khác =====
@@ -63,12 +63,21 @@ namespace WinCook
             var f = new frmProfile();
             OpenForm(f);
         }
-        // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID ======
-        // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID (CÓ TÌM KIẾM) ======
+
+        // ====== HÀM LOAD DANH SÁCH CÔNG THỨC LÊN GRID (CÓ TÌM KIẾM + YÊU THÍCH) ======
         private void LoadRecipes(string? keyword = null)
         {
             // Xoá các item cũ để hiển thị dữ liệu thật
             flowLayoutPanel1.Controls.Clear();
+
+            // Lấy user hiện tại (nếu đã đăng nhập)
+            int? currentUserId = null;
+            if (AuthManager.IsLoggedIn && AuthManager.CurrentUser != null)
+            {
+                // NOTE: nếu model User của bạn đặt tên property khác (vd: UserID)
+                // thì sửa lại dòng dưới cho đúng:
+                currentUserId = AuthManager.CurrentUser.UserId;
+            }
 
             try
             {
@@ -77,18 +86,24 @@ namespace WinCook
                 {
                     // SQL cơ bản
                     string sql = @"
-                SELECT 
-                    r.recipe_id,
-                    r.title,
-                    r.difficulty,
-                    r.time_needed,
-                    c.name      AS category,
-                    u.username  AS author,
-                    r.image_url
-                FROM Recipes r
-                JOIN Users u ON r.user_id = u.user_id
-                LEFT JOIN Categories c ON r.category_id = c.category_id
-            ";
+SELECT 
+    r.recipe_id,
+    r.title,
+    r.difficulty,
+    r.time_needed,
+    c.name      AS category,
+    u.username  AS author,
+    r.image_url,
+    CASE 
+        WHEN f.user_id IS NULL THEN 0 
+        ELSE 1 
+    END AS is_favorite
+FROM Recipes r
+JOIN Users u ON r.user_id = u.user_id
+LEFT JOIN Categories c ON r.category_id = c.category_id
+LEFT JOIN Favorites f 
+    ON f.recipe_id = r.recipe_id AND f.user_id = @uid
+";
 
                     // Nếu có keyword -> thêm WHERE lọc theo title
                     if (!string.IsNullOrWhiteSpace(keyword))
@@ -101,6 +116,12 @@ namespace WinCook
                     sql += " ORDER BY r.created_at DESC";
 
                     cmd.CommandText = sql;
+
+                    // Truyền @uid (có thể null -> không có bản ghi nào trong Favorites)
+                    if (currentUserId.HasValue)
+                        cmd.Parameters.AddWithValue("@uid", currentUserId.Value);
+                    else
+                        cmd.Parameters.AddWithValue("@uid", DBNull.Value);
 
                     conn.Open();
                     using (var reader = cmd.ExecuteReader())
@@ -120,7 +141,6 @@ namespace WinCook
             }
         }
 
-
         // Tạo 1 thẻ (card) hiển thị 1 công thức
         private Control BuildRecipeCard(SqlDataReader reader)
         {
@@ -134,6 +154,12 @@ namespace WinCook
 
             int recipeId = Convert.ToInt32(reader["recipe_id"]);
             card.Tag = recipeId;
+
+            bool isFavorite = false;
+            if (reader["is_favorite"] != DBNull.Value)
+            {
+                isFavorite = Convert.ToInt32(reader["is_favorite"]) == 1;
+            }
 
             // --- hình món ăn ---
             var pic = new PictureBox();
@@ -171,7 +197,7 @@ namespace WinCook
             var lblTitle = new Label();
             lblTitle.Font = label2.Font; // dùng font mẫu
             lblTitle.AutoSize = false;
-            lblTitle.Width = infoPanel.Width - 20;
+            lblTitle.Width = infoPanel.Width - 40; // chừa chỗ cho icon ♥
             lblTitle.Location = new Point(10, -2);
             lblTitle.Text = reader["title"].ToString();
             lblTitle.Tag = recipeId;
@@ -240,6 +266,17 @@ namespace WinCook
                 : reader["difficulty"].ToString();
             lblLevel.Tag = recipeId;
 
+            // ===== Icon YÊU THÍCH (♥ / ♡) =====
+            var favLabel = new Label();
+            favLabel.Font = new Font("Segoe UI", 14, FontStyle.Bold);
+            favLabel.AutoSize = true;
+            favLabel.ForeColor = Color.Red;
+            favLabel.Text = isFavorite ? "♥" : "♡";
+            favLabel.Location = new Point(infoPanel.Width - 30, 5);
+            favLabel.Cursor = Cursors.Hand;
+            favLabel.Tag = recipeId;
+            favLabel.Click += FavLabel_Click;
+
             // add các label vào infoPanel
             infoPanel.Controls.Add(lblTitle);
             infoPanel.Controls.Add(lblAuthorCaption);
@@ -250,8 +287,9 @@ namespace WinCook
             infoPanel.Controls.Add(lblCate);
             infoPanel.Controls.Add(lblLevelCaption);
             infoPanel.Controls.Add(lblLevel);
+            infoPanel.Controls.Add(favLabel);
 
-            // click ở đâu trên card cũng chọn được công thức
+            // click ở đâu trên card cũng chọn được công thức (sau dùng cho xem chi tiết)
             card.Click += RecipeCard_Click;
             pic.Click += RecipeCard_Click;
             lblTitle.Click += RecipeCard_Click;
@@ -267,7 +305,7 @@ namespace WinCook
             return card;
         }
 
-        // Tạm thời: click card chỉ show ID, sau này ta mở frmRecipeDetails
+        // Click card: tạm thời chỉ báo ID (sau này có thể mở frmRecipeDetails)
         private void RecipeCard_Click(object? sender, EventArgs e)
         {
             if (sender is Control c && c.Tag != null)
@@ -275,6 +313,69 @@ namespace WinCook
                 int recipeId = Convert.ToInt32(c.Tag);
                 MessageBox.Show("Bạn đã chọn công thức ID = " + recipeId,
                     "Recipe", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        // ====== CLICK ICON YÊU THÍCH (♥ / ♡) ======
+        private void FavLabel_Click(object? sender, EventArgs e)
+        {
+            if (sender is not Label lbl || lbl.Tag == null)
+                return;
+
+            if (!AuthManager.IsLoggedIn || AuthManager.CurrentUser == null)
+            {
+                MessageBox.Show("Vui lòng đăng nhập để dùng chức năng Yêu thích.",
+                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            int recipeId = Convert.ToInt32(lbl.Tag);
+
+            // NOTE: nếu User của bạn dùng tên property khác thì sửa dòng dưới
+            int userId = AuthManager.CurrentUser.UserId;
+
+            bool isCurrentlyFavorite = lbl.Text == "♥";
+
+            try
+            {
+                using (var conn = new SqlConnection(DBHelper.ConnectionString))
+                using (var cmd = conn.CreateCommand())
+                {
+                    conn.Open();
+
+                    if (isCurrentlyFavorite)
+                    {
+                        // Đang là favorite -> bỏ thích
+                        cmd.CommandText = @"
+DELETE FROM Favorites 
+WHERE user_id = @uid AND recipe_id = @rid";
+                    }
+                    else
+                    {
+                        // Chưa thích -> thêm mới
+                        cmd.CommandText = @"
+IF NOT EXISTS (
+    SELECT 1 FROM Favorites WHERE user_id = @uid AND recipe_id = @rid
+)
+BEGIN
+    INSERT INTO Favorites(user_id, recipe_id) 
+    VALUES(@uid, @rid);
+END";
+                    }
+
+                    cmd.Parameters.AddWithValue("@uid", userId);
+                    cmd.Parameters.AddWithValue("@rid", recipeId);
+
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Đổi icon trên UI
+                lbl.Text = isCurrentlyFavorite ? "♡" : "♥";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi cập nhật Yêu thích: " + ex.Message,
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -324,6 +425,7 @@ namespace WinCook
         {
             LoadRecipes();
         }
+
         private void guna2Button6_Click(object sender, EventArgs e)
         {
             // Lấy keyword từ ô search
@@ -352,7 +454,5 @@ namespace WinCook
             // Sau khi form đóng, load lại danh sách để thấy recipe mới
             LoadRecipes();
         }
-
-
     }
 }

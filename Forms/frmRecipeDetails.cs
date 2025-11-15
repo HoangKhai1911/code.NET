@@ -1,4 +1,5 @@
-﻿using Guna.UI2.WinForms;
+﻿//Forms/frmRecipeDetails.cs
+using Guna.UI2.WinForms;
 using System;
 using System.Data;
 using Microsoft.Data.SqlClient;
