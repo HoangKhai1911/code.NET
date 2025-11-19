@@ -129,9 +129,9 @@ namespace WinCook
             {
                 var card = new Panel
                 {
-                    Width = 275,
+                    Width = 255,
                     Height = 323,
-                    Margin = new Padding(20),
+                    Margin = new Padding(10),
                     BackColor = Color.Transparent,
                     Cursor = Cursors.Hand,
                 };
