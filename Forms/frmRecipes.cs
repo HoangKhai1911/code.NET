@@ -7,6 +7,7 @@ using WinCook.Models;   // <-- THÊM
 using WinCook.Services; // <-- THÊM
 using WinCook.Controls; // <-- THÊM THƯ MỤC CONTROLS
 using System.Drawing;
+using Guna.UI2.AnimatorNS;
 namespace WinCook
 {
     public partial class frmRecipes : Form
@@ -16,7 +17,7 @@ namespace WinCook
         private readonly InteractionService _interactionService; // Dùng cho nút Yêu thích
         private readonly int _currentUserId;
         private List<Recipe> _allRecipes; // Biến lưu trữ danh sách
-
+        private readonly RecipeController _controller;
         public frmRecipes()
         {
             InitializeComponent();
@@ -25,7 +26,7 @@ namespace WinCook
             _recipeService = new RecipeService();
             _interactionService = new InteractionService();
             _allRecipes = new List<Recipe>();
-
+            _controller = new RecipeController();
             // Lấy ID người dùng (nếu đã đăng nhập)
             if (AuthManager.IsLoggedIn)
             {
@@ -66,10 +67,7 @@ namespace WinCook
         {
             try
             {
-                // 1. Gọi Service
-                _allRecipes = _recipeService.GetAllRecipes();
-
-                // 2. Hiển thị lên
+                _allRecipes = _controller.GetAllRecipes();  // ⬅️ gọi controller
                 PopulateRecipeList(_allRecipes);
             }
             catch (Exception ex)
@@ -77,6 +75,7 @@ namespace WinCook
                 MessageBox.Show("Lỗi nghiêm trọng khi tải công thức: " + ex.Message);
             }
         }
+
         /// <summary>
         /// (Nhóm A) Load danh sách Category vào combobox Category by
         /// </summary>
@@ -257,13 +256,22 @@ namespace WinCook
                 int recipeId = r.RecipeId;    // capture local
                 void openDetail(object s, EventArgs e)
                 {
-                    using (var f = new frmRecipeDetails(recipeId))
+                    // Lấy full Recipe từ controller
+                    var recipe = _controller.GetRecipeDetails(recipeId);
+                    if (recipe == null)
+                    {
+                        MessageBox.Show("Không tìm thấy chi tiết món ăn.");
+                        return;
+                    }
+
+                    using (var f = new frmRecipeDetails(recipe))  // ⬅️ truyền MODEL
                     {
                         f.ShowDialog();
                     }
-                    // Sau khi đóng form chi tiết, load lại nếu cần
+
                     LoadAllRecipes();
                 }
+
 
                 card.Click += openDetail;
                 pic.Click += openDetail;

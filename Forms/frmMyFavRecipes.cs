@@ -12,6 +12,7 @@ namespace WinCook
     {
         // === KHAI BÁO SERVICE (NHÓM B) ===
         private readonly InteractionService _interactionService;
+        private readonly RecipeController _controller;
         private readonly int _currentUserId;
         private List<Recipe> _allFavoriteRecipes; // Biến lưu trữ danh sách
 
@@ -21,6 +22,7 @@ namespace WinCook
 
             // Khởi tạo
             _interactionService = new InteractionService();
+            _controller = new RecipeController();
             _allFavoriteRecipes = new List<Recipe>();
 
             // Lấy ID người dùng (nếu đã đăng nhập)
@@ -69,27 +71,26 @@ namespace WinCook
         {
             try
             {
-                // 1. Gọi Service (Tải lại dữ liệu mới nhất mỗi lần load)
-                _allFavoriteRecipes = _interactionService.GetFavoriteRecipes(_currentUserId);
+                // 1. Lấy list favorites qua CONTROLLER
+                _allFavoriteRecipes = _controller.GetFavoriteRecipes(_currentUserId);
 
                 // 2. Lọc (nếu có)
                 List<Recipe> recipesToShow;
                 if (string.IsNullOrWhiteSpace(keyword))
                 {
-                    recipesToShow = _allFavoriteRecipes; // Hiển thị tất cả
+                    recipesToShow = _allFavoriteRecipes;
                 }
                 else
                 {
-                    // Lọc danh sách đã tải
                     string searchTerm = keyword.ToLower();
                     recipesToShow = _allFavoriteRecipes
                         .Where(r =>
-                            r.Title.ToLower().Contains(searchTerm) ||
-                            r.AuthorName.ToLower().Contains(searchTerm))
+                            (r.Title ?? "").ToLower().Contains(searchTerm) ||
+                            (r.AuthorName ?? "").ToLower().Contains(searchTerm))
                         .ToList();
                 }
 
-                // 3. Hiển thị lên
+                // 3. Bind ra UI
                 PopulateFavoriteList(recipesToShow);
             }
             catch (Exception ex)
@@ -97,6 +98,7 @@ namespace WinCook
                 MessageBox.Show("Lỗi nghiêm trọng khi tải công thức yêu thích: " + ex.Message);
             }
         }
+
 
         /// <summary>
         /// (Nhóm A/B) Đổ danh sách Recipe vào FlowLayoutPanel
@@ -123,18 +125,139 @@ namespace WinCook
             }
 
             // Lặp qua các công thức yêu thích
-            foreach (var recipe in recipes)
+            foreach (var r in recipes)
             {
-                // 1. Tạo "Khuôn" (ucRecipeCard)
-                // (Đảm bảo ucRecipeCard.cs nằm trong 'WinCook.Controls')
-                ucRecipeCard card = new ucRecipeCard(recipe);
+                var card = new Panel
+                {
+                    Width = 275,
+                    Height = 323,
+                    Margin = new Padding(20),
+                    BackColor = Color.Transparent,
+                    Cursor = Cursors.Hand,
+                };
 
-                // 2. Gán sự kiện Click cho thẻ
-                card.CardClicked += OnRecipeCardClicked;
+                var pic = new PictureBox
+                {
+                    Width = 275,
+                    Height = 200,
+                    SizeMode = PictureBoxSizeMode.StretchImage,
+                    BackColor = Color.White
+                };
 
-                // 3. Thêm "Khuôn" vào "Khay" (flowLayoutPanel1)
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(r.ImageUrl) && File.Exists(r.ImageUrl))
+                        pic.Image = Image.FromFile(r.ImageUrl);
+                }
+                catch { }
+
+                card.Controls.Add(pic);
+
+                var info = new Panel
+                {
+                    Width = 275,
+                    Height = 120,
+                    Top = 200,
+                    BackColor = Color.White
+                };
+
+                var lblTitle = new Label
+                {
+                    Text = r.Title ?? "(No title)",
+                    Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                    AutoSize = false,
+                    Left = 18,
+                    Top = 0,
+                    Width = 240,
+                };
+
+                var lblAuthorCaption = new Label
+                {
+                    Text = "Author:",
+                    Font = new Font("Segoe UI Semibold", 10),
+                    AutoSize = true,
+                    Left = 18,
+                    Top = 25
+                };
+
+                var lblAuthor = new Label
+                {
+                    Text = r.AuthorName ?? "",
+                    Font = new Font("Segoe UI Semibold", 10),
+                    AutoSize = true,
+                    Left = 84,
+                    Top = 25
+                };
+
+                var lblTimeCaption = new Label
+                {
+                    Text = "Time:",
+                    Font = new Font("Segoe UI Semibold", 10),
+                    AutoSize = true,
+                    Left = 18,
+                    Top = 47
+                };
+
+                var lblTime = new Label
+                {
+                    Text = string.IsNullOrWhiteSpace(r.TimeNeeded) ? "N/A" : r.TimeNeeded,
+                    Font = new Font("Segoe UI Semibold", 10),
+                    AutoSize = true,
+                    Left = 84,
+                    Top = 47
+                };
+
+                var lblCateCaption = new Label
+                {
+                    Text = "Cate:",
+                    Font = new Font("Segoe UI Semibold", 10),
+                    AutoSize = true,
+                    Left = 18,
+                    Top = 69
+                };
+
+                var lblCate = new Label
+                {
+                    Text = r.CategoryName ?? "N/A",
+                    Font = new Font("Segoe UI Semibold", 10),
+                    AutoSize = true,
+                    Left = 84,
+                    Top = 69
+                };
+
+                info.Controls.Add(lblTitle);
+                info.Controls.Add(lblAuthorCaption);
+                info.Controls.Add(lblAuthor);
+                info.Controls.Add(lblTimeCaption);
+                info.Controls.Add(lblTime);
+                info.Controls.Add(lblCateCaption);
+                info.Controls.Add(lblCate);
+
+                card.Controls.Add(info);
+
+                // ========== CLICK mở chi tiết ==========
+                int recipeId = r.RecipeId;
+
+                void openDetail(object s, EventArgs e)
+                {
+                    var recipe = _controller.GetRecipeDetails(recipeId);
+                    using (var f = new frmRecipeDetails(recipe))
+                        f.ShowDialog();
+
+                    LoadFavorites();
+                }
+
+                card.Click += openDetail;
+                pic.Click += openDetail;
+                info.Click += openDetail;
+                lblTitle.Click += openDetail;
+                lblAuthor.Click += openDetail;
+                lblTime.Click += openDetail;
+                lblCate.Click += openDetail;
+
                 flowLayoutPanel1.Controls.Add(card);
             }
+
         }
 
         /// <summary>
@@ -146,17 +269,26 @@ namespace WinCook
             {
                 int recipeId = card.GetRecipeId();
 
-                // Mở form Chi tiết (Nhóm B)
-                frmRecipeDetails frmDetail = new frmRecipeDetails(recipeId);
-                frmDetail.ShowDialog();
+                // ✅ Lấy FULL Recipe detail từ controller
+                var recipe = _controller.GetRecipeDetails(recipeId);
+                if (recipe == null)
+                {
+                    MessageBox.Show("Không tìm thấy chi tiết món ăn.");
+                    return;
+                }
 
-                // === QUAN TRỌNG ===
-                // Khi form Chi tiết đóng, tải lại TOÀN BỘ danh sách
-                // (vì người dùng có thể đã BỎ Yêu thích)
-                _allFavoriteRecipes.Clear(); // Xóa cache cũ
-                LoadFavorites(guna2TextBox1.Text.Trim()); // Tải lại
+                // ✅ Truyền MODEL Recipe vào form Details
+                using (var frmDetail = new frmRecipeDetails(recipe))
+                {
+                    frmDetail.ShowDialog();
+                }
+
+                // Sau khi đóng Details, reload lại favorites (vì user có thể bỏ tim)
+                _allFavoriteRecipes.Clear();
+                LoadFavorites(guna2TextBox1.Text.Trim());
             }
         }
+
 
         #endregion
 

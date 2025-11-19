@@ -76,10 +76,14 @@ namespace WinCook
         /// (Nhóm A) Tải thông tin chính của công thức (Tên, Ảnh, Nguyên liệu, Các bước)
         /// THAY THẾ logic LoadDetails() cũ bằng Service
         /// </summary>
-        private void LoadDetails() // Giữ nguyên tên hàm của bạn
+        private void LoadDetails()
         {
-            // Bước 1: Gọi Service để lấy dữ liệu
-            _currentRecipe = _recipeService.GetRecipeDetails(_recipeId);
+            // Nếu chưa có dữ liệu (đi từ constructor int id)
+            if (_currentRecipe == null)
+            {
+                _currentRecipe = _recipeService.GetRecipeDetails(_recipeId);
+            }
+
             if (_currentRecipe == null)
             {
                 MessageBox.Show("Không thể tải chi tiết công thức.", "Lỗi");
@@ -87,30 +91,31 @@ namespace WinCook
                 return;
             }
 
-            // Bước 2: GÁN DỮ LIỆU LÊN UI (Sử dụng tên control của bạn)
-            guna2HtmlLabel3.Text = _currentRecipe.Title;        // Tên món
-            guna2HtmlLabel5.Text = _currentRecipe.AuthorName;   // Tác giả
-            guna2HtmlLabel7.Text = _currentRecipe.CategoryName; // Danh mục
-            guna2HtmlLabel11.Text = !string.IsNullOrEmpty(_currentRecipe.TimeNeeded) ? _currentRecipe.TimeNeeded : "N/A"; // Thời gian
-            guna2HtmlLabel9.Text = !string.IsNullOrEmpty(_currentRecipe.Difficulty) ? _currentRecipe.Difficulty : "Medium"; // Độ khó
+            // Bước 2: GÁN DỮ LIỆU LÊN UI
+            guna2HtmlLabel3.Text = _currentRecipe.Title;
+            guna2HtmlLabel5.Text = _currentRecipe.AuthorName;
+            guna2HtmlLabel7.Text = _currentRecipe.CategoryName;
+            guna2HtmlLabel11.Text = !string.IsNullOrEmpty(_currentRecipe.TimeNeeded)
+                                        ? _currentRecipe.TimeNeeded : "N/A";
+            guna2HtmlLabel9.Text = !string.IsNullOrEmpty(_currentRecipe.Difficulty)
+                                        ? _currentRecipe.Difficulty : "Medium";
 
-            // Hiển thị điểm trung bình (lên Label mới, ví dụ: lblAvgRating)
-            // lblAvgRating.Text = _currentRecipe.AverageRating.ToString("F1") + " sao";
-
-            // Tải ảnh (Giữ logic của bạn, nhưng dùng ImageUrl từ object)
             string imagePath = _currentRecipe.ImageUrl;
             if (!string.IsNullOrEmpty(imagePath) && System.IO.File.Exists(imagePath))
                 pictureBox1.ImageLocation = imagePath;
             else
-                pictureBox1.Image = null; // Hoặc set ảnh mặc định
+                pictureBox1.Image = null;
 
-            // === SỬA LỖI CS1503 ===
-            // Bước 3: Tải Nguyên liệu và Các bước (dưới dạng STRING)
-            PopulateIngredients(_currentRecipe.Ingredients); // Gửi string
-            PopulateSteps(_currentRecipe.Steps);             // Gửi string
+            PopulateIngredients(_currentRecipe.Ingredients);
+            PopulateSteps(_currentRecipe.Steps);
 
-            // Bước 4: Tải các chức năng Nhóm B
             LoadInteractionData();
+        }
+        // ✅ Constructor mới: nhận thẳng model Recipe
+        public frmRecipeDetails(Recipe recipe) : this(recipe.RecipeId)
+        {
+            // Gán sẵn model để LoadDetails không phải gọi DB nữa
+            _currentRecipe = recipe;
         }
 
         /// <summary>
