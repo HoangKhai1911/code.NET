@@ -1,341 +1,272 @@
 ﻿using System;
-using System.Data;
-using System.Drawing;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
-using System.Data.SqlClient;
-using System.IO;
-using WinCook.Services;   // dùng AuthManager
+using WinCook.Models;   // <-- THÊM
+using WinCook.Services; // <-- THÊM
+using WinCook.Controls; // <-- THÊM THƯ MỤC CONTROLS
 
 namespace WinCook
 {
     public partial class frmMyFavRecipes : Form
     {
+        // === KHAI BÁO SERVICE (NHÓM B) ===
+        private readonly InteractionService _interactionService;
+        private readonly int _currentUserId;
+        private List<Recipe> _allFavoriteRecipes; // Biến lưu trữ danh sách
+
         public frmMyFavRecipes()
         {
             InitializeComponent();
+
+            // Khởi tạo
+            _interactionService = new InteractionService();
+            _allFavoriteRecipes = new List<Recipe>();
+
+            // Lấy ID người dùng (nếu đã đăng nhập)
+            if (AuthManager.IsLoggedIn)
+            {
+                _currentUserId = AuthManager.CurrentUser.UserId;
+            }
+            else
+            {
+                // Nếu chưa đăng nhập, đóng form
+                MessageBox.Show("Vui lòng đăng nhập để xem Yêu thích.");
+                this.Close();
+                return;
+            }
+
+            // === Gán sự kiện (khớp với file Designer của bạn) ===
+            this.Load += frmMyFavRecipes_Load;
+
+            // Menu
+            guna2Button1.Click += guna2Button1_Click; // Home
+            guna2Button2.Click += guna2Button2_Click; // Recipes
+            guna2Button5.Click += guna2Button5_Click; // Favorites
+            guna2Button3.Click += guna2Button3_Click; // Collections
+            guna2Button4.Click += guna2Button4_Click; // Profiles
+
+            // Chức năng
+            guna2Button6.Click += guna2Button6_Click; // Search
+
+            // === SỬA LỖI ĐIỀU HƯỚNG ===
+            // Gán sự kiện FormClosing (khi bấm nút 'X')
+            this.FormClosing += FrmMyFavRecipes_FormClosing;
         }
 
-        // Helper mở form khác
+        private void frmMyFavRecipes_Load(object sender, EventArgs e)
+        {
+            // Tải danh sách công thức
+            LoadFavorites();
+        }
+
+        #region === Logic Chính (Nhóm B - Tổng tài audio) ===
+
+        /// <summary>
+        /// (Nhóm B) Tải tất cả công thức YÊU THÍCH từ Service
+        /// </summary>
+        private void LoadFavorites(string keyword = null)
+        {
+            try
+            {
+                // 1. Gọi Service (Tải lại dữ liệu mới nhất mỗi lần load)
+                _allFavoriteRecipes = _interactionService.GetFavoriteRecipes(_currentUserId);
+
+
+                // 2. Lọc (nếu có)
+                List<Recipe> recipesToShow;
+                if (string.IsNullOrWhiteSpace(keyword))
+                {
+                    recipesToShow = _allFavoriteRecipes; // Hiển thị tất cả
+                }
+                else
+                {
+                    // Lọc danh sách đã tải
+                    string searchTerm = keyword.ToLower();
+                    recipesToShow = _allFavoriteRecipes
+                        .Where(r => r.Title.ToLower().Contains(searchTerm) ||
+                                    r.AuthorName.ToLower().Contains(searchTerm))
+                        .ToList();
+                }
+
+                // 3. Hiển thị lên
+                PopulateFavoriteList(recipesToShow);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi nghiêm trọng khi tải công thức yêu thích: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// (Nhóm A/B) Đổ danh sách Recipe vào FlowLayoutPanel
+        /// (Sử dụng 'ucRecipeCard')
+        /// </summary>
+        private void PopulateFavoriteList(List<Recipe> recipes)
+        {
+            // Giả định bạn có FlowLayoutPanel tên là 'flowLayoutPanel1' (theo code cũ)
+            flowLayoutPanel1.Controls.Clear(); // Xóa các thẻ cũ
+
+            if (recipes == null || recipes.Count == 0)
+            {
+                // Hiển thị 1 Label thông báo "Bạn chưa yêu thích công thức nào"
+                Label lblEmpty = new Label();
+                lblEmpty.Text = "Bạn chưa có công thức yêu thích nào.";
+                lblEmpty.Font = new System.Drawing.Font("Segoe UI", 12F);
+                lblEmpty.ForeColor = System.Drawing.Color.Gray;
+                lblEmpty.AutoSize = false;
+                lblEmpty.Width = flowLayoutPanel1.Width - 50; // Trừ 50 margin
+                lblEmpty.Height = 100;
+                lblEmpty.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+                flowLayoutPanel1.Controls.Add(lblEmpty);
+                return;
+            }
+
+            // Lặp qua các công thức yêu thích
+            foreach (var recipe in recipes)
+            {
+                // 1. Tạo "Khuôn" (ucRecipeCard)
+                // (Đảm bảo ucRecipeCard.cs nằm trong 'WinCook.Controls')
+                ucRecipeCard card = new ucRecipeCard(recipe);
+
+                // 2. Gán sự kiện Click cho thẻ
+                card.CardClicked += OnRecipeCardClicked;
+
+                // 3. Thêm "Khuôn" vào "Khay" (flowLayoutPanel1)
+                flowLayoutPanel1.Controls.Add(card);
+            }
+        }
+
+        /// <summary>
+        /// (Nhóm A/B) Được gọi khi bấm vào bất kỳ thẻ 'ucRecipeCard' nào
+        /// </summary>
+        private void OnRecipeCardClicked(object sender, EventArgs e)
+        {
+            if (sender is ucRecipeCard card)
+            {
+                int recipeId = card.GetRecipeId();
+
+                // Mở form Chi tiết (Nhóm B)
+                frmRecipeDetails frmDetail = new frmRecipeDetails(recipeId);
+                frmDetail.ShowDialog();
+
+                // === QUAN TRỌNG ===
+                // Khi form Chi tiết đóng, tải lại TOÀN BỘ danh sách
+                // (vì người dùng có thể đã BỎ Yêu thích)
+                _allFavoriteRecipes.Clear(); // Xóa cache cũ
+                LoadFavorites(guna2TextBox1.Text.Trim()); // Tải lại
+            }
+        }
+
+        #endregion
+
+        #region === Sự kiện Nút bấm Chức năng (Nhóm B) ===
+
+        // Search (Nút 'guna2Button6')
+        private void guna2Button6_Click(object sender, EventArgs e)
+        {
+            // Lấy keyword từ ô search (Giả định tên là 'guna2TextBox1' - theo code cũ)
+            string keyword = guna2TextBox1.Text.Trim();
+
+            // Chỉ cần gọi lại LoadFavorites với keyword
+            LoadFavorites(keyword);
+        }
+
+        #endregion
+
+        #region === SỬA LỖI ĐIỀU HƯỚNG ===
+
+        // Helper dùng chung: Đóng form hiện tại
         private void OpenForm(Form f)
         {
             f.Show();
-            this.Hide();
+            this.Hide(); // Sửa từ 'Hide()' thành 'Close()'
         }
 
-        // ===== Thanh menu top =====
+        // ===== Thanh menu trên cùng của frmMyFavRecipes =====
 
         // Home
         private void guna2Button1_Click(object sender, EventArgs e)
         {
-            var f = new frmHomePage();
+            var f = Application.OpenForms.OfType<frmHomePage>().FirstOrDefault();
+            if (f == null) f = new frmHomePage();
             OpenForm(f);
         }
 
         // Recipes
         private void guna2Button2_Click(object sender, EventArgs e)
         {
-            var f = new frmRecipes();
+            var f = Application.OpenForms.OfType<frmRecipes>().FirstOrDefault();
+            if (f == null) f = new frmRecipes();
             OpenForm(f);
         }
 
         // Favorites (đang ở đây nên không làm gì)
         private void guna2Button5_Click(object sender, EventArgs e)
         {
-            // no-op
+            // Đang ở Favorites, không cần chuyển
         }
 
         // Collections
         private void guna2Button3_Click(object sender, EventArgs e)
         {
-            var f = new frmCollection();
+            var f = Application.OpenForms.OfType<frmCollection>().FirstOrDefault();
+            if (f == null) f = new frmCollection();
             OpenForm(f);
         }
 
         // Profiles
         private void guna2Button4_Click(object sender, EventArgs e)
         {
-            var f = new frmProfile();
+            var f = Application.OpenForms.OfType<frmProfile>().FirstOrDefault();
+            if (f == null) f = new frmProfile();
             OpenForm(f);
         }
 
-        // ====== LOAD DANH SÁCH YÊU THÍCH ======
-        private void LoadFavorites(string? keyword = null)
+        // === HÀM MỚI: XỬ LÝ KHI BẤM NÚT 'X' ===
+        private void FrmMyFavRecipes_FormClosing(object sender, FormClosingEventArgs e)
         {
-            flowLayoutPanel1.Controls.Clear();
+            // Chỉ xử lý khi người dùng bấm 'X'
+            // (Nếu chúng ta gọi this.Close() trong OpenForm,
+            // 'isNavigating' SẼ KHÔNG CÓ, nên e.CloseReason SẼ LÀ UserClosing
+            // -> Lỗi logic cũ.
+            // Cần sửa lại OpenForm
 
-            if (!AuthManager.IsLoggedIn || AuthManager.CurrentUser == null)
+            // Tạm thời sửa lại logic check:
+            // Chỉ tìm HomePage nếu form đó ĐÃ TỪNG MỞ (Visible = false)
+
+            if (e.CloseReason == CloseReason.UserClosing)
             {
-                MessageBox.Show("Vui lòng đăng nhập để xem danh sách yêu thích.",
-                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
-            // NOTE: sửa lại property nếu User của bạn tên khác
-            int userId = AuthManager.CurrentUser.UserId;
-
-            try
-            {
-                using (var conn = new SqlConnection(DBHelper.ConnectionString))
-                using (var cmd = conn.CreateCommand())
+                // Tìm frmHomePage CŨ (đang bị ẩn) và hiển thị lại
+                var homePage = Application.OpenForms.OfType<frmHomePage>().FirstOrDefault();
+                if (homePage != null)
                 {
-                    string sql = @"
-SELECT
-    r.recipe_id,
-    r.title,
-    r.difficulty,
-    r.time_needed,
-    c.name      AS category,
-    u.username  AS author,
-    r.image_url
-FROM Favorites f
-JOIN Recipes r ON f.recipe_id = r.recipe_id
-JOIN Users   u ON r.user_id = u.user_id
-LEFT JOIN Categories c ON r.category_id = c.category_id
-WHERE f.user_id = @uid
-";
-
-                    if (!string.IsNullOrWhiteSpace(keyword))
-                    {
-                        sql += " AND r.title LIKE @keyword";
-                        cmd.Parameters.AddWithValue("@keyword", "%" + keyword + "%");
-                    }
-
-                    sql += " ORDER BY f.created_at DESC";
-
-                    cmd.CommandText = sql;
-                    cmd.Parameters.AddWithValue("@uid", userId);
-
-                    conn.Open();
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            var card = BuildRecipeCard(reader);
-                            flowLayoutPanel1.Controls.Add(card);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khi tải danh sách công thức yêu thích: " + ex.Message,
-                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        // Tạo 1 card cho 1 công thức yêu thích
-        private Control BuildRecipeCard(SqlDataReader reader)
-        {
-            var card = new Panel();
-            card.Width = 240;
-            card.Height = 323;
-            card.Margin = new Padding(10);
-            card.BackColor = Color.Transparent;
-            card.Cursor = Cursors.Hand;
-
-            int recipeId = Convert.ToInt32(reader["recipe_id"]);
-            card.Tag = recipeId;
-
-            // ----- Hình món ăn -----
-            var pic = new PictureBox();
-            pic.Location = new Point(0, 0);
-            pic.Size = new Size(card.Width, 199);
-            pic.SizeMode = PictureBoxSizeMode.StretchImage;
-            pic.Tag = recipeId;
-
-            try
-            {
-                string? imageUrl = reader["image_url"] as string;
-                if (!string.IsNullOrWhiteSpace(imageUrl) && File.Exists(imageUrl))
-                {
-                    pic.Image = Image.FromFile(imageUrl);
+                    homePage.Show();
                 }
                 else
                 {
-                    // fallback: dùng hình mẫu nếu có sẵn trong Designer
-                    if (pictureBox1 != null && pictureBox1.Image != null)
-                        pic.Image = pictureBox1.Image;
+                    // Fallback: Nếu không tìm thấy (ví dụ: đang test)
+                    var loginForm = Application.OpenForms.OfType<frmLogin>().FirstOrDefault();
+                    if (loginForm != null)
+                    {
+                        loginForm.Show();
+                    }
+                    else
+                    {
+                        new frmLogin().Show();
+                    }
                 }
             }
-            catch
-            {
-                if (pictureBox1 != null && pictureBox1.Image != null)
-                    pic.Image = pictureBox1.Image;
-            }
-
-            // ----- Panel info bên dưới -----
-            var infoPanel = new Panel();
-            infoPanel.BackColor = Color.White;
-            infoPanel.Location = new Point(0, 199);
-            infoPanel.Size = new Size(card.Width, 120);
-
-            // Title
-            var lblTitle = new Label();
-            lblTitle.Font = new Font("Segoe UI", 11, FontStyle.Bold);
-            lblTitle.AutoSize = false;
-            lblTitle.Width = infoPanel.Width - 40;
-            lblTitle.Location = new Point(10, -2);
-            lblTitle.Text = reader["title"].ToString();
-            lblTitle.Tag = recipeId;
-
-            // Author caption
-            var lblAuthorCaption = new Label();
-            lblAuthorCaption.Font = new Font("Segoe UI Semibold", 10);
-            lblAuthorCaption.AutoSize = true;
-            lblAuthorCaption.Location = new Point(10, 23);
-            lblAuthorCaption.Text = "Author :";
-
-            // Author
-            var lblAuthor = new Label();
-            lblAuthor.Font = new Font("Segoe UI Semibold", 10);
-            lblAuthor.AutoSize = true;
-            lblAuthor.Location = new Point(80, 23);
-            lblAuthor.Text = reader["author"].ToString();
-            lblAuthor.Tag = recipeId;
-
-            // Time
-            var lblTimeCaption = new Label();
-            lblTimeCaption.Font = new Font("Segoe UI Semibold", 10);
-            lblTimeCaption.AutoSize = true;
-            lblTimeCaption.Location = new Point(10, 47);
-            lblTimeCaption.Text = "Time :";
-
-            var lblTime = new Label();
-            lblTime.Font = new Font("Segoe UI Semibold", 10);
-            lblTime.AutoSize = true;
-            lblTime.Location = new Point(80, 47);
-            lblTime.Text = reader["time_needed"]?.ToString();
-            lblTime.Tag = recipeId;
-
-            // Category
-            var lblCateCaption = new Label();
-            lblCateCaption.Font = new Font("Segoe UI Semibold", 10);
-            lblCateCaption.AutoSize = true;
-            lblCateCaption.Location = new Point(10, 68);
-            lblCateCaption.Text = "Cate :";
-
-            var lblCate = new Label();
-            lblCate.Font = new Font("Segoe UI Semibold", 10);
-            lblCate.AutoSize = true;
-            lblCate.Location = new Point(80, 68);
-            lblCate.Text = reader["category"] == DBNull.Value
-                ? "-"
-                : reader["category"].ToString();
-            lblCate.Tag = recipeId;
-
-            // Level
-            var lblLevelCaption = new Label();
-            lblLevelCaption.Font = new Font("Segoe UI Semibold", 10);
-            lblLevelCaption.AutoSize = true;
-            lblLevelCaption.Location = new Point(10, 91);
-            lblLevelCaption.Text = "Level : ";
-
-            var lblLevel = new Label();
-            lblLevel.Font = new Font("Segoe UI Semibold", 10);
-            lblLevel.AutoSize = true;
-            lblLevel.Location = new Point(80, 91);
-            lblLevel.Text = reader["difficulty"] == DBNull.Value
-                ? "-"
-                : reader["difficulty"].ToString();
-            lblLevel.Tag = recipeId;
-
-            // Icon ♥ để bỏ khỏi yêu thích nếu muốn
-            var favLabel = new Label();
-            favLabel.Font = new Font("Segoe UI", 14, FontStyle.Bold);
-            favLabel.AutoSize = true;
-            favLabel.ForeColor = Color.Red;
-            favLabel.Text = "♥"; // ở trang Favorites toàn bộ đều đang được yêu thích
-            favLabel.Location = new Point(infoPanel.Width - 30, 5);
-            favLabel.Cursor = Cursors.Hand;
-            favLabel.Tag = recipeId;
-            favLabel.Click += FavLabel_Click;
-
-            infoPanel.Controls.Add(lblTitle);
-            infoPanel.Controls.Add(lblAuthorCaption);
-            infoPanel.Controls.Add(lblAuthor);
-            infoPanel.Controls.Add(lblTimeCaption);
-            infoPanel.Controls.Add(lblTime);
-            infoPanel.Controls.Add(lblCateCaption);
-            infoPanel.Controls.Add(lblCate);
-            infoPanel.Controls.Add(lblLevelCaption);
-            infoPanel.Controls.Add(lblLevel);
-            infoPanel.Controls.Add(favLabel);
-
-            // click card => tạm thời chỉ show ID
-            card.Click += Card_Click;
-            pic.Click += Card_Click;
-            lblTitle.Click += Card_Click;
-            lblAuthor.Click += Card_Click;
-            lblTime.Click += Card_Click;
-            lblCate.Click += Card_Click;
-            lblLevel.Click += Card_Click;
-
-            card.Controls.Add(pic);
-            card.Controls.Add(infoPanel);
-
-            return card;
         }
 
-        private void Card_Click(object? sender, EventArgs e)
+        #endregion
+
+        // (Đây là các hàm rỗng từ file v1 của bạn, giữ lại để tránh lỗi Designer)
+        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e) { }
+
+        private void guna2Button15_Click(object sender, EventArgs e)
         {
-            if (sender is Control c && c.Tag != null)
-            {
-                int recipeId = Convert.ToInt32(c.Tag);
-                MessageBox.Show("Công thức yêu thích ID = " + recipeId,
-                    "Favorite", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
 
-        // Click icon ♥ ở trang Favorites => bỏ yêu thích và reload
-        private void FavLabel_Click(object? sender, EventArgs e)
-        {
-            if (sender is not Label lbl || lbl.Tag == null)
-                return;
-
-            if (!AuthManager.IsLoggedIn || AuthManager.CurrentUser == null)
-                return;
-
-            int recipeId = Convert.ToInt32(lbl.Tag);
-            int userId = AuthManager.CurrentUser.UserId;
-
-            try
-            {
-                using (var conn = new SqlConnection(DBHelper.ConnectionString))
-                using (var cmd = conn.CreateCommand())
-                {
-                    conn.Open();
-                    cmd.CommandText = @"
-DELETE FROM Favorites 
-WHERE user_id = @uid AND recipe_id = @rid";
-                    cmd.Parameters.AddWithValue("@uid", userId);
-                    cmd.Parameters.AddWithValue("@rid", recipeId);
-                    cmd.ExecuteNonQuery();
-                }
-
-                // Reload lại danh sách favorites
-                LoadFavorites(guna2TextBox1.Text.Trim());
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khi bỏ yêu thích: " + ex.Message,
-                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        // Form load
-        private void frmMyFavRecipes_Load(object sender, EventArgs e)
-        {
-            LoadFavorites();
-        }
-
-        // Nút Search trên form Favorites (nếu có)
-        private void guna2Button6_Click(object sender, EventArgs e)
-        {
-            string keyword = guna2TextBox1.Text.Trim();
-            if (string.IsNullOrWhiteSpace(keyword))
-                LoadFavorites();
-            else
-                LoadFavorites(keyword);
         }
     }
 }

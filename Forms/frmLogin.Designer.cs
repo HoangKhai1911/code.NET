@@ -186,9 +186,9 @@
             // 
             pictureBox3.BackColor = Color.Transparent;
             pictureBox3.Image = (Image)resources.GetObject("pictureBox3.Image");
-            pictureBox3.Location = new Point(257, 310);
+            pictureBox3.Location = new Point(208, 311);
             pictureBox3.Name = "pictureBox3";
-            pictureBox3.Size = new Size(35, 32);
+            pictureBox3.Size = new Size(29, 32);
             pictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox3.TabIndex = 8;
             pictureBox3.TabStop = false;
@@ -197,7 +197,7 @@
             // 
             pictureBox2.BackColor = Color.Transparent;
             pictureBox2.Image = (Image)resources.GetObject("pictureBox2.Image");
-            pictureBox2.Location = new Point(257, 230);
+            pictureBox2.Location = new Point(208, 226);
             pictureBox2.Name = "pictureBox2";
             pictureBox2.Size = new Size(29, 36);
             pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;

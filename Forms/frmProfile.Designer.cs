@@ -248,6 +248,7 @@ namespace WinCook
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBox1.TabIndex = 19;
             pictureBox1.TabStop = false;
+            pictureBox1.Click += pictureBox1_Click;
             // 
             // button1
             // 
@@ -400,6 +401,7 @@ namespace WinCook
             guna2Button4.Size = new Size(134, 36);
             guna2Button4.TabIndex = 56;
             guna2Button4.Text = "Collections";
+            guna2Button4.Click += guna2Button4_Click;
             // 
             // guna2Button3
             // 
@@ -418,6 +420,7 @@ namespace WinCook
             guna2Button3.Size = new Size(125, 36);
             guna2Button3.TabIndex = 55;
             guna2Button3.Text = "Recipes";
+            guna2Button3.Click += guna2Button3_Click;
             // 
             // guna2Button5
             // 
@@ -436,6 +439,7 @@ namespace WinCook
             guna2Button5.Size = new Size(128, 32);
             guna2Button5.TabIndex = 54;
             guna2Button5.Text = "Profiles";
+            guna2Button5.Click += guna2Button5_Click;
             // 
             // guna2Button6
             // 
@@ -454,6 +458,7 @@ namespace WinCook
             guna2Button6.Size = new Size(108, 36);
             guna2Button6.TabIndex = 53;
             guna2Button6.Text = "Favorites";
+            guna2Button6.Click += guna2Button6_Click;
             // 
             // guna2Button7
             // 
@@ -472,6 +477,7 @@ namespace WinCook
             guna2Button7.Size = new Size(84, 32);
             guna2Button7.TabIndex = 52;
             guna2Button7.Text = "Home ";
+            guna2Button7.Click += guna2Button7_Click;
             // 
             // frmProfile
             // 
@@ -505,13 +511,8 @@ namespace WinCook
             ((System.ComponentModel.ISupportInitialize)chart2).EndInit();
             ResumeLayout(false);
             PerformLayout();
-            guna2Button7.Click += guna2Button7_Click;   // Home
-            guna2Button3.Click += guna2Button3_Click;   // Recipes
-            guna2Button6.Click += guna2Button6_Click;   // Favorites
-            guna2Button4.Click += guna2Button4_Click;   // Collections
-            guna2Button5.Click += guna2Button5_Click;   // Profiles
-                                                        // nút icon góc phải đã có:
-                                                        // guna2Button2.Click += guna2Button2_Click;
+            // nút icon góc phải đã có:
+            // guna2Button2.Click += guna2Button2_Click;
 
         }
 

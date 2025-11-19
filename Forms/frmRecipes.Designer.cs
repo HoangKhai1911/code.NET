@@ -333,6 +333,7 @@ namespace WinCook
             guna2Button1.Size = new Size(84, 32);
             guna2Button1.TabIndex = 20;
             guna2Button1.Text = "Home ";
+            guna2Button1.Click += guna2Button1_Click;
             // 
             // guna2Button5
             // 
@@ -351,6 +352,7 @@ namespace WinCook
             guna2Button5.Size = new Size(108, 36);
             guna2Button5.TabIndex = 28;
             guna2Button5.Text = "Favorites";
+            guna2Button5.Click += guna2Button5_Click;
             // 
             // guna2Button4
             // 
@@ -369,6 +371,7 @@ namespace WinCook
             guna2Button4.Size = new Size(108, 36);
             guna2Button4.TabIndex = 30;
             guna2Button4.Text = "Profiles";
+            guna2Button4.Click += guna2Button4_Click;
             // 
             // guna2Button3
             // 
@@ -387,6 +390,7 @@ namespace WinCook
             guna2Button3.Size = new Size(125, 36);
             guna2Button3.TabIndex = 29;
             guna2Button3.Text = "Collections";
+            guna2Button3.Click += guna2Button3_Click;
             // 
             // guna2Button2
             // 
@@ -405,6 +409,7 @@ namespace WinCook
             guna2Button2.Size = new Size(115, 32);
             guna2Button2.TabIndex = 31;
             guna2Button2.Text = "Recipes";
+            guna2Button2.Click += guna2Button2_Click;
             // 
             // flowLayoutPanel1
             // 
@@ -1248,6 +1253,7 @@ namespace WinCook
             guna2Button6.Size = new Size(113, 36);
             guna2Button6.TabIndex = 37;
             guna2Button6.Text = "Search";
+            guna2Button6.Click += guna2Button6_Click;
             // 
             // guna2ComboBox1
             // 
@@ -1265,6 +1271,7 @@ namespace WinCook
             guna2ComboBox1.ShadowDecoration.CustomizableEdges = customizableEdges34;
             guna2ComboBox1.Size = new Size(175, 36);
             guna2ComboBox1.TabIndex = 38;
+            guna2ComboBox1.SelectedIndexChanged += guna2ComboBox1_SelectedIndexChanged;
             // 
             // guna2HtmlLabel1
             // 
@@ -1351,13 +1358,6 @@ namespace WinCook
             ((System.ComponentModel.ISupportInitialize)pictureBox7).EndInit();
             ResumeLayout(false);
             PerformLayout();
-            // ===== Gán sự kiện cho thanh menu top =====
-            guna2Button1.Click += guna2Button1_Click;   // Home
-            guna2Button2.Click += guna2Button2_Click;   // Recipes
-            guna2Button5.Click += guna2Button5_Click;   // Favorites
-            guna2Button3.Click += guna2Button3_Click;   // Collections
-            guna2Button4.Click += guna2Button4_Click;   // Profiles
-            guna2Button6.Click += guna2Button6_Click;   // Search theo tên món ăn
 
         }
 

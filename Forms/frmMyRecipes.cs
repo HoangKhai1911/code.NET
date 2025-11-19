@@ -1,310 +1,268 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using WinCook.Models;
 using WinCook.Services;
+using WinCook.Controls;
 
 namespace WinCook
 {
     public partial class frmMyRecipes : Form
     {
-        // Dùng chung RecipeService + AuthManager
-        private readonly RecipeService _recipeService = new RecipeService();
-
-        // Lấy UserId hiện tại: nếu chưa login thì tạm dùng 1 (demo)
-        private int CurrentUserId => AuthManager.IsLoggedIn
-            ? AuthManager.CurrentUser.UserId
-            : 1;
+        // === KHAI BÁO SERVICE (NHÓM A) ===
+        private readonly RecipeService _recipeService;
+        private readonly int _currentUserId;
+        private List<Recipe> _myRecipes; // Biến lưu trữ danh sách
 
         public frmMyRecipes()
         {
             InitializeComponent();
 
-            // Khi form load thì hiển thị danh sách công thức
-            this.Load += (s, e) => LoadMyRecipes();
+            // Khởi tạo
+            _recipeService = new RecipeService();
+            _myRecipes = new List<Recipe>();
 
-            // Nút Add: Designer đã gán sẵn Click += guna2Button7_Click;
-            // nên ở đây KHÔNG cần gán lại để tránh chạy 2 lần.
+            // Lấy ID người dùng (nếu đã đăng nhập)
+            if (AuthManager.IsLoggedIn)
+            {
+                _currentUserId = AuthManager.CurrentUser.UserId;
+            }
+            else
+            {
+                // Nếu chưa đăng nhập, đóng form
+                MessageBox.Show("Vui lòng đăng nhập để xem 'Công thức của tôi'.");
+                this.Close();
+                return;
+            }
+
+            // === Gán sự kiện (Giả định tên control giống frmMyFavRecipes) ===
+            this.Load += frmMyRecipes_Load;
+            
+            // Menu
+            guna2Button1.Click += guna2Button1_Click; // Home
+            guna2Button2.Click += guna2Button2_Click; // Recipes
+            guna2Button5.Click += guna2Button5_Click; // Favorites
+            guna2Button3.Click += guna2Button3_Click; // Collections
+            guna2Button4.Click += guna2Button4_Click; // Profiles
+
+            // Chức năng
+            guna2Button6.Click += guna2Button6_Click; // Search
+
+            // === SỬA LỖI ĐIỀU HƯỚNG ===
+            this.FormClosing += FrmMyRecipes_FormClosing;
         }
 
-        // 🟢 Hàm hiển thị danh sách công thức
-        private void LoadMyRecipes()
+        private void frmMyRecipes_Load(object sender, EventArgs e)
         {
-            flowLayoutPanel1.Controls.Clear();
+            // Tải danh sách công thức
+            LoadMyRecipes();
+        }
 
-            // Lấy danh sách công thức của user hiện tại
-            List<Recipe> recipes = _recipeService.GetRecipesByUser(CurrentUserId);
+        #region === Logic Chính (Nhóm A) ===
+
+        /// <summary>
+        /// (Nhóm A) Tải tất cả công thức CỦA TÔI từ Service
+        /// </summary>
+        private void LoadMyRecipes(string keyword = null)
+        {
+            try
+            {
+                // 1. Gọi Service (Tải lại dữ liệu mới nhất mỗi lần load)
+                _myRecipes = _recipeService.GetRecipesByAuthor(_currentUserId); // <-- GỌI HÀM MỚI
+
+                // 2. Lọc (nếu có)
+                List<Recipe> recipesToShow;
+                if (string.IsNullOrWhiteSpace(keyword))
+                {
+                    recipesToShow = _myRecipes; // Hiển thị tất cả
+                }
+                else
+                {
+                    // Lọc danh sách đã tải
+                    string searchTerm = keyword.ToLower();
+                    recipesToShow = _myRecipes
+                        .Where(r => r.Title.ToLower().Contains(searchTerm))
+                        .ToList();
+                }
+                
+                // 3. Hiển thị lên
+                PopulateRecipeList(recipesToShow);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi nghiêm trọng khi tải 'Công thức của tôi': " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// (Nhóm A) Đổ danh sách Recipe vào FlowLayoutPanel
+        /// </summary>
+        private void PopulateRecipeList(List<Recipe> recipes)
+        {
+            // Giả định bạn có FlowLayoutPanel tên là 'flowLayoutPanel1'
+            flowLayoutPanel1.Controls.Clear(); // Xóa các thẻ cũ
 
             if (recipes == null || recipes.Count == 0)
             {
-                Label noDataLabel = new Label
-                {
-                    Text = "Chưa có công thức nào!",
-                    Dock = DockStyle.Fill,
-                    Font = new Font("Segoe UI", 12, FontStyle.Italic),
-                    TextAlign = ContentAlignment.MiddleCenter,
-                    ForeColor = Color.Gray
-                };
-                flowLayoutPanel1.Controls.Add(noDataLabel);
+                Label lblEmpty = new Label();
+                lblEmpty.Text = "Bạn chưa đăng công thức nào.";
+                lblEmpty.Font = new System.Drawing.Font("Segoe UI", 12F);
+                lblEmpty.ForeColor = System.Drawing.Color.Gray;
+                lblEmpty.AutoSize = false;
+                lblEmpty.Width = flowLayoutPanel1.Width;
+                lblEmpty.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+                flowLayoutPanel1.Controls.Add(lblEmpty);
                 return;
             }
 
             foreach (var recipe in recipes)
             {
-                // ==== Tạo card giống layout mẫu ====
-
-                // Panel ngoài chứa cả hình + phần thông tin
-                Panel card = new Panel
-                {
-                    Width = 275,
-                    Height = 366,
-                    Margin = new Padding(20, 10, 0, 10),
-                };
-
-                // Ảnh món ăn
-                PictureBox pic = new PictureBox
-                {
-                    Location = new Point(0, 3),
-                    Size = new Size(278, 199),
-                    SizeMode = PictureBoxSizeMode.StretchImage,
-                    BackgroundImageLayout = ImageLayout.Zoom
-                };
-
-                try
-                {
-                    if (!string.IsNullOrWhiteSpace(recipe.ImageUrl) && File.Exists(recipe.ImageUrl))
-                    {
-                        pic.Image = Image.FromFile(recipe.ImageUrl);
-                    }
-                    else
-                    {
-                        pic.Image = Properties.Resources.no_image;
-                    }
-                }
-                catch
-                {
-                    pic.Image = Properties.Resources.no_image;
-                }
-
-                // Panel trắng phía dưới chứa text + nút Edit/Delete
-                Panel infoPanel = new Panel
-                {
-                    BackColor = Color.White,
-                    Location = new Point(0, 202),
-                    Size = new Size(278, 164)
-                };
-
-                // ===== Các label giống file Designer =====
-
-                // Tiêu đề món
-                Label lblTitle = new Label
-                {
-                    AutoSize = true,
-                    Font = new Font("Segoe UI", 11F, FontStyle.Bold),
-                    Location = new Point(18, -2),
-                    Text = recipe.Title
-                };
-
-                // "Author :" + tên tác giả
-                Label lblAuthorCaption = new Label
-                {
-                    AutoSize = true,
-                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-                    Location = new Point(18, 23),
-                    Text = "Author :"
-                };
-
-                Label lblAuthor = new Label
-                {
-                    AutoSize = true,
-                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-                    Location = new Point(84, 23),
-                    Text = string.IsNullOrWhiteSpace(recipe.AuthorName)
-                        ? "Unknown"
-                        : recipe.AuthorName
-                };
-
-                // Thời gian
-                Label lblTimeCaption = new Label
-                {
-                    AutoSize = true,
-                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-                    Location = new Point(18, 47),
-                    Text = "Time :"
-                };
-
-                Label lblTime = new Label
-                {
-                    AutoSize = true,
-                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-                    Location = new Point(84, 46),
-                    Text = string.IsNullOrWhiteSpace(recipe.TimeNeeded)
-                        ? "N/A"
-                        : recipe.TimeNeeded
-                };
-
-                // Category
-                Label lblCateCaption = new Label
-                {
-                    AutoSize = true,
-                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-                    Location = new Point(18, 68),
-                    Text = "Cate :"
-                };
-
-                Label lblCate = new Label
-                {
-                    AutoSize = true,
-                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-                    Location = new Point(82, 71),
-                    Text = string.IsNullOrWhiteSpace(recipe.CategoryName)
-                        ? "Unknown"
-                        : recipe.CategoryName
-                };
-
-                // Level / Difficulty
-                Label lblLevelCaption = new Label
-                {
-                    AutoSize = true,
-                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-                    Location = new Point(18, 91),
-                    Text = "Level : "
-                };
-
-                Label lblLevel = new Label
-                {
-                    AutoSize = true,
-                    Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-                    Location = new Point(84, 92),
-                    Text = string.IsNullOrWhiteSpace(recipe.Difficulty)
-                        ? "N/A"
-                        : recipe.Difficulty
-                };
-
-                // ===== Nút Edit / Delete (dùng Button thường cho đơn giản) =====
-
-                Button btnEdit = new Button
-                {
-                    Text = "Edit",
-                    BackColor = Color.Orange,
-                    ForeColor = Color.White,
-                    FlatStyle = FlatStyle.Flat,
-                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                    Size = new Size(77, 32),
-                    Location = new Point(89, 127)
-                };
-                btnEdit.FlatAppearance.BorderSize = 0;
-                btnEdit.Click += (s, e) =>
-                {
-                    var editForm = new frmAddRecipie(recipe.RecipeId);
-                    editForm.ShowDialog();
-                    // Sau khi sửa xong, load lại danh sách
-                    LoadMyRecipes();
-                };
-
-                Button btnDelete = new Button
-                {
-                    Text = "Delete",
-                    BackColor = Color.Brown,
-                    ForeColor = Color.White,
-                    FlatStyle = FlatStyle.Flat,
-                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                    Size = new Size(94, 32),
-                    Location = new Point(172, 127)
-                };
-                btnDelete.FlatAppearance.BorderSize = 0;
-                btnDelete.Click += (s, e) =>
-                {
-                    if (MessageBox.Show("Bạn có chắc muốn xóa công thức này?",
-                            "Xác nhận xóa",
-                            MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Warning) == DialogResult.Yes)
-                    {
-                        DeleteRecipe(recipe.RecipeId);
-                        LoadMyRecipes();
-                    }
-                };
-
-                // (Tuỳ chọn) click vào hình để xem chi tiết
-                pic.Cursor = Cursors.Hand;
-                pic.Click += (s, e) =>
-                {
-                    var detailForm = new frmRecipeDetails(recipe.RecipeId);
-                    detailForm.ShowDialog();
-                };
-
-                // Thêm control vào infoPanel
-                infoPanel.Controls.Add(btnEdit);
-                infoPanel.Controls.Add(btnDelete);
-                infoPanel.Controls.Add(lblLevel);
-                infoPanel.Controls.Add(lblLevelCaption);
-                infoPanel.Controls.Add(lblCate);
-                infoPanel.Controls.Add(lblCateCaption);
-                infoPanel.Controls.Add(lblTime);
-                infoPanel.Controls.Add(lblTimeCaption);
-                infoPanel.Controls.Add(lblAuthor);
-                infoPanel.Controls.Add(lblAuthorCaption);
-                infoPanel.Controls.Add(lblTitle);
-
-                // Thêm vào card
-                card.Controls.Add(infoPanel);
-                card.Controls.Add(pic);
-
-                // Thêm card vào flowLayoutPanel
+                ucRecipeCard card = new ucRecipeCard(recipe);
+                card.CardClicked += OnRecipeCardClicked;
                 flowLayoutPanel1.Controls.Add(card);
             }
         }
 
-        // 🗑️ Xóa công thức – dùng RecipeService
-        private void DeleteRecipe(int recipeId)
+        /// <summary>
+        /// (Nhóm A) Được gọi khi bấm vào bất kỳ thẻ 'ucRecipeCard' nào
+        /// </summary>
+        private void OnRecipeCardClicked(object sender, EventArgs e)
         {
-            bool success = _recipeService.DeleteRecipe(recipeId);
+            if (sender is ucRecipeCard card)
+            {
+                int recipeId = card.GetRecipeId();
 
-            if (success)
-            {
-                MessageBox.Show("Đã xóa công thức!", "Thành công",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else
-            {
-                MessageBox.Show("Không thể xóa công thức.", "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // Mở form Chi tiết
+                frmRecipeDetails frmDetail = new frmRecipeDetails(recipeId);
+                frmDetail.ShowDialog();
+
+                // Khi form Chi tiết đóng, tải lại danh sách
+                // (Phòng trường hợp người dùng Sửa/Xóa công thức của họ)
+                _myRecipes.Clear(); 
+                LoadMyRecipes(guna2TextBox1.Text.Trim()); // Tải lại
             }
         }
 
-        // ➕ Nút thêm công thức mới (Add)
-        private void guna2Button7_Click(object sender, EventArgs e)
+        #endregion
+
+        #region === Sự kiện Nút bấm Chức năng (Nhóm A) ===
+
+        // Search (Nút 'guna2Button6')
+        private void guna2Button6_Click(object sender, EventArgs e)
         {
-            var addForm = new frmAddRecipie();
-            addForm.ShowDialog();
-            LoadMyRecipes();
+            // Lấy keyword từ ô search (Giả định tên là 'guna2TextBox1')
+            string keyword = guna2TextBox1.Text.Trim();
+            
+            // Chỉ cần gọi lại LoadMyRecipes với keyword
+            LoadMyRecipes(keyword);
+        }
+        
+        #endregion
+
+        #region === SỬA LỖI ĐIỀU HƯỚNG ===
+
+        // Helper dùng chung: Đóng form hiện tại
+        private void OpenForm(Form f)
+        {
+            f.Show();
+            this.Close();
         }
 
-        // ⚙️ Các nút khác (chưa dùng) – giữ nguyên để không ảnh hưởng chỗ khác
-        private void guna2Button8_Click(object sender, EventArgs e) { }
-        private void guna2Button6_Click(object sender, EventArgs e) { }
-        private void guna2TextBox1_TextChanged(object sender, EventArgs e) { }
-        private void guna2Button1_Click(object sender, EventArgs e) { }
-        private void guna2Button2_Click(object sender, EventArgs e) { }
-        private void guna2Button4_Click(object sender, EventArgs e) { }
-        private void guna2Button3_Click(object sender, EventArgs e) { }
-        private void guna2Button9_Click(object sender, EventArgs e) { }
-        private void guna2Button5_Click(object sender, EventArgs e) { }
-        private void guna2Button11_Click(object sender, EventArgs e) { }
-        private void guna2Button10_Click(object sender, EventArgs e) { }
-        private void guna2Button13_Click(object sender, EventArgs e) { }
-        private void guna2Button12_Click(object sender, EventArgs e) { }
-        private void pictureBox1_Click(object sender, EventArgs e) { }
+        // ===== Thanh menu trên cùng của frmMyRecipes =====
+
+        // Home
+        private void guna2Button1_Click(object sender, EventArgs e)
+        {
+            var f = Application.OpenForms.OfType<frmHomePage>().FirstOrDefault();
+            if (f == null) f = new frmHomePage();
+            OpenForm(f);
+        }
+
+        // Recipes
+        private void guna2Button2_Click(object sender, EventArgs e)
+        {
+            var f = Application.OpenForms.OfType<frmRecipes>().FirstOrDefault();
+            if (f == null) f = new frmRecipes();
+            OpenForm(f);
+        }
+
+        // Favorites
+        private void guna2Button5_Click(object sender, EventArgs e)
+        {
+            var f = Application.OpenForms.OfType<frmMyFavRecipes>().FirstOrDefault();
+            if (f == null) f = new frmMyFavRecipes();
+            OpenForm(f);
+        }
+
+        // Collections
+        private void guna2Button3_Click(object sender, EventArgs e)
+        {
+            var f = Application.OpenForms.OfType<frmCollection>().FirstOrDefault();
+            if (f == null) f = new frmCollection();
+            OpenForm(f);
+        }
+
+        // Profiles
+        private void guna2Button4_Click(object sender, EventArgs e)
+        {
+            var f = Application.OpenForms.OfType<frmProfile>().FirstOrDefault();
+            if (f == null) f = new frmProfile();
+            OpenForm(f);
+        }
+
+        // === HÀM MỚI: XỬ LÝ KHI BẤM NÚT 'X' ===
+        private void FrmMyRecipes_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                // Tìm frmHomePage CŨ (đang bị ẩn) và hiển thị lại
+                var homePage = Application.OpenForms.OfType<frmHomePage>().FirstOrDefault();
+                if (homePage != null)
+                {
+                    homePage.Show();
+                }
+                else
+                {
+                    // Fallback: Nếu không tìm thấy (ví dụ: đang test)
+                    var loginForm = Application.OpenForms.OfType<frmLogin>().FirstOrDefault();
+                    if (loginForm != null)
+                    {
+                        loginForm.Show();
+                    }
+                    else
+                    {
+                        new frmLogin().Show();
+                    }
+                }
+            }
+        }
+        
+        #endregion
+        
+        // (Đây là các hàm rỗng từ file v1 của bạn, giữ lại để tránh lỗi Designer)
+        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e) { }
+        private void panel2_Paint(object sender, PaintEventArgs e) { }
+        private void panel1_Paint(object sender, PaintEventArgs e) { }
         private void label2_Click(object sender, EventArgs e) { }
-        private void label4_Click(object sender, EventArgs e) { }
-        private void label6_Click(object sender, EventArgs e) { }
-        private void label8_Click(object sender, EventArgs e) { }
+        private void guna2CircleButton1_Click(object sender, EventArgs e) { }
         private void label45_Click(object sender, EventArgs e) { }
+        private void pictureBox6_Click(object sender, EventArgs e) { }
+        private void panel12_Paint(object sender, PaintEventArgs e) { }
 
-        private void guna2Button1_Click_1(object sender, EventArgs e)
-        {
-        }
+        // --- Bổ sung từ lỗi 'image_0dfd25.png' ---
+        private void guna2Button8_Click(object sender, EventArgs e) { }
+        private void guna2TextBox1_TextChanged(object sender, EventArgs e) { }
+        private void label8_Click(object sender, EventArgs e) { }
+        private void label6_Click(object sender, EventArgs e) { }
+        private void label4_Click(object sender, EventArgs e) { }
+        private void pictureBox1_Click(object sender, EventArgs e) { }
+        private void guna2Button9_Click(object sender, EventArgs e) { }
+        private void guna2Button10_Click(object sender, EventArgs e) { }
+        private void guna2Button11_Click(object sender, EventArgs e) { }
+        private void guna2Button12_Click(object sender, EventArgs e) { }
+        private void guna2Button13_Click(object sender, EventArgs e) { }
+        private void guna2Button1_Click_1(object sender, EventArgs e) { }
+        private void guna2Button7_Click(object sender, EventArgs e) { }
     }
 }

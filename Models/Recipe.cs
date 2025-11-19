@@ -48,19 +48,20 @@ namespace WinCook.Models
         /// <summary>
         /// Danh sách các nguyên liệu (lấy từ bảng Ingredients)
         /// </summary>
-        public List<Ingredient> Ingredients { get; set; }
+        public string Ingredients { get; set; }
 
         /// <summary>
         /// Danh sách các bước làm (lấy từ bảng Steps)
         /// </summary>
-        public List<Step> Steps { get; set; }
+        public string Steps { get; set; }
 
 
         public Recipe()
         {
             // Khởi tạo 2 list để tránh lỗi null
-            Ingredients = new List<Ingredient>();
-            Steps = new List<Step>();
+            // (Xóa khởi tạo List<T> cũ)
+            Ingredients = "";
+            Steps = "";
         }
     }
 }

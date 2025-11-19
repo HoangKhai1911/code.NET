@@ -1,16 +1,15 @@
-﻿//Services/RecipeService.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using Microsoft.Data.SqlClient;
+using System.Data.SqlClient;
 using WinCook.Models;
 
 namespace WinCook.Services
 {
     /// <summary>
     /// Xử lý tất cả logic nghiệp vụ cho Nhóm A (Quản lý Công thức).
-    /// Nhiệm vụ của: Ktuoi, Fuc, Khải.
-    /// Đã cập nhật để dùng Stored Procedures và CSDL chuẩn hóa (Ingredients/Steps).
+    /// ĐÃ NÂNG CẤP: Sử dụng Stored Procedures và các cột NVARCHAR(MAX)
+    /// (ingredients, steps) để khớp với CSDL của Ktuoi.
     /// </summary>
     public class RecipeService
     {
@@ -19,29 +18,20 @@ namespace WinCook.Services
         #region === CREATE (Thêm mới) ===
 
         /// <summary>
-        /// Thêm một công thức mới (bao gồm cả Ingredients và Steps) vào CSDL.
+        /// Thêm một công thức mới vào CSDL.
         /// Sử dụng Stored Procedure 'AddRecipe'.
         /// </summary>
         /// <param name="recipe">Đối tượng Recipe chứa đầy đủ thông tin</param>
         /// <returns>True nếu thành công, False nếu thất bại.</returns>
         public bool AddNewRecipe(Recipe recipe)
         {
-            // Yêu cầu: Thông tin Recipe phải có UserId (từ AuthManager)
-            // và danh sách Ingredients, Steps.
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                // Bắt đầu một Transaction để đảm bảo toàn vẹn dữ liệu
-                // Hoặc Thêm tất cả, hoặc không thêm gì cả.
-                SqlTransaction transaction = connection.BeginTransaction();
-
-                try
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    int newRecipeId;
-
-                    // --- Bước 1: Thêm Recipe chính (dùng SP AddRecipe) ---
-                    using (SqlCommand cmd = new SqlCommand("AddRecipe", connection, transaction))
+                    connection.Open();
+                    // --- Thêm Recipe chính (dùng SP AddRecipe) ---
+                    using (SqlCommand cmd = new SqlCommand("AddRecipe", connection))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
@@ -52,58 +42,20 @@ namespace WinCook.Services
                         cmd.Parameters.AddWithValue("@time_needed", (object)recipe.TimeNeeded ?? DBNull.Value);
                         cmd.Parameters.AddWithValue("@image_url", (object)recipe.ImageUrl ?? DBNull.Value);
 
-                        // SP 'AddRecipe' của bạn trả về ID của Recipe mới
-                        newRecipeId = Convert.ToInt32(cmd.ExecuteScalar());
+                        // === NÂNG CẤP ===
+                        // Gửi 2 chuỗi NVARCHAR(MAX) khớp với SP của bạn
+                        cmd.Parameters.AddWithValue("@ingredients", (object)recipe.Ingredients ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@steps", (object)recipe.Steps ?? DBNull.Value);
 
-                        if (newRecipeId <= 0)
-                        {
-                            throw new Exception("Không thể tạo Recipe ID mới.");
-                        }
+                        cmd.ExecuteNonQuery();
+                        return true;
                     }
-
-                    // --- Bước 2: Thêm Ingredients (dùng ID mới lấy được) ---
-                    if (recipe.Ingredients != null && recipe.Ingredients.Count > 0)
-                    {
-                        foreach (var ingredient in recipe.Ingredients)
-                        {
-                            string query = "INSERT INTO Ingredients (recipe_id, name, quantity) VALUES (@recipe_id, @name, @quantity)";
-                            using (SqlCommand cmdIng = new SqlCommand(query, connection, transaction))
-                            {
-                                cmdIng.Parameters.AddWithValue("@recipe_id", newRecipeId);
-                                cmdIng.Parameters.AddWithValue("@name", ingredient.Name);
-                                cmdIng.Parameters.AddWithValue("@quantity", (object)ingredient.Quantity ?? DBNull.Value);
-                                cmdIng.ExecuteNonQuery();
-                            }
-                        }
-                    }
-
-                    // --- Bước 3: Thêm Steps (dùng ID mới lấy được) ---
-                    if (recipe.Steps != null && recipe.Steps.Count > 0)
-                    {
-                        foreach (var step in recipe.Steps)
-                        {
-                            string query = "INSERT INTO Steps (recipe_id, step_number, instruction) VALUES (@recipe_id, @step_number, @instruction)";
-                            using (SqlCommand cmdStep = new SqlCommand(query, connection, transaction))
-                            {
-                                cmdStep.Parameters.AddWithValue("@recipe_id", newRecipeId);
-                                cmdStep.Parameters.AddWithValue("@step_number", step.StepNumber);
-                                cmdStep.Parameters.AddWithValue("@instruction", step.Instruction);
-                                cmdStep.ExecuteNonQuery();
-                            }
-                        }
-                    }
-
-                    // Nếu tất cả thành công, Commit Transaction
-                    transaction.Commit();
-                    return true;
                 }
-                catch (Exception ex)
-                {
-                    // Nếu có lỗi, Rollback Transaction
-                    transaction.Rollback();
-                    Console.WriteLine("Lỗi khi thêm công thức (AddNewRecipe): " + ex.Message);
-                    return false;
-                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi khi thêm công thức (AddNewRecipe): " + ex.Message);
+                return false;
             }
         }
 
@@ -154,53 +106,6 @@ namespace WinCook.Services
             }
             return recipes;
         }
-        /// <summary>
-        /// Lấy tất cả công thức của 1 user (dùng cho màn My Recipes).
-        /// </summary>
-        public List<Recipe> GetRecipesByUser(int userId)
-        {
-            List<Recipe> recipes = new List<Recipe>();
-
-            string query = @"
-                SELECT 
-                    r.recipe_id, r.title, r.difficulty, r.time_needed, r.image_url,
-                    u.username AS AuthorName, 
-                    c.name AS CategoryName,
-                    ISNULL(rs.total_favorites, 0) AS TotalFavorites,
-                    ISNULL(rs.avg_rating, 0) AS AverageRating
-                FROM Recipes r
-                JOIN Users u ON r.user_id = u.user_id
-                LEFT JOIN Categories c ON r.category_id = c.category_id
-                LEFT JOIN Recipe_Stats rs ON r.recipe_id = rs.recipe_id
-                WHERE r.user_id = @user_id
-                ORDER BY r.created_at DESC";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    using (SqlCommand command = new SqlCommand(query, connection))
-                    {
-                        command.Parameters.AddWithValue("@user_id", userId);
-
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                recipes.Add(MapRecipeFromReader(reader));
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Lỗi khi lấy danh sách công thức theo user: " + ex.Message);
-            }
-
-            return recipes;
-        }
 
         /// <summary>
         /// Lấy chi tiết đầy đủ của 1 công thức (bao gồm Ingredients và Steps).
@@ -225,7 +130,9 @@ namespace WinCook.Services
                         {
                             if (reader.Read())
                             {
-                                // SP này không trả về Ingredients/Steps/Favorites, ta phải tự map
+                                // === NÂNG CẤP ===
+                                // SP 'GetRecipeDetail' của bạn đã trả về 
+                                // 'ingredients' và 'steps', bây giờ chúng ta đọc nó
                                 recipe = new Recipe
                                 {
                                     RecipeId = Convert.ToInt32(reader["recipe_id"]),
@@ -235,54 +142,17 @@ namespace WinCook.Services
                                     ImageUrl = reader["image_url"].ToString(),
                                     AuthorName = reader["author"].ToString(),
                                     CategoryName = reader["category"].ToString(),
-                                    AverageRating = Convert.ToDouble(reader["avg_rating"])
-                                    // Các trường Ingredients/Steps sẽ được load ở Bước 2 & 3
+                                    AverageRating = Convert.ToDouble(reader["avg_rating"]),
+
+                                    // Đọc 2 cột NVARCHAR(MAX)
+                                    Ingredients = reader["ingredients"].ToString(),
+                                    Steps = reader["steps"].ToString()
                                 };
                             }
                         } // Reader tự đóng
                     }
 
-                    if (recipe == null) return null; // Không tìm thấy Recipe
-
-                    // --- Bước 2: Lấy Ingredients ---
-                    string queryIng = "SELECT ingredient_id, name, quantity FROM Ingredients WHERE recipe_id = @recipe_id";
-                    using (SqlCommand cmdIng = new SqlCommand(queryIng, connection))
-                    {
-                        cmdIng.Parameters.AddWithValue("@recipe_id", recipeId);
-                        using (SqlDataReader readerIng = cmdIng.ExecuteReader())
-                        {
-                            while (readerIng.Read())
-                            {
-                                recipe.Ingredients.Add(new Ingredient
-                                {
-                                    IngredientId = (int)readerIng["ingredient_id"],
-                                    Name = (string)readerIng["name"],
-                                    Quantity = readerIng["quantity"].ToString(),
-                                    RecipeId = recipeId
-                                });
-                            }
-                        }
-                    }
-
-                    // --- Bước 3: Lấy Steps ---
-                    string queryStep = "SELECT step_id, step_number, instruction FROM Steps WHERE recipe_id = @recipe_id ORDER BY step_number ASC";
-                    using (SqlCommand cmdStep = new SqlCommand(queryStep, connection))
-                    {
-                        cmdStep.Parameters.AddWithValue("@recipe_id", recipeId);
-                        using (SqlDataReader readerStep = cmdStep.ExecuteReader())
-                        {
-                            while (readerStep.Read())
-                            {
-                                recipe.Steps.Add(new Step
-                                {
-                                    StepId = (int)readerStep["step_id"],
-                                    StepNumber = (int)readerStep["step_number"],
-                                    Instruction = (string)readerStep["instruction"],
-                                    RecipeId = recipeId
-                                });
-                            }
-                        }
-                    }
+                    // (Không cần Bước 2 & 3 - Lấy Ingredients/Steps riêng nữa)
                 }
             }
             catch (Exception ex)
@@ -385,97 +255,142 @@ namespace WinCook.Services
             return recipes;
         }
 
+        /// <summary>
+        /// (HÀM MỚI - CHO FRMMYRECIPES) Lấy công thức theo ID Tác giả
+        /// </summary>
+        public List<Recipe> GetRecipesByAuthor(int authorUserId)
+        {
+            List<Recipe> recipes = new List<Recipe>();
+            // Dùng View Recipe_Stats
+            string query = @"
+                SELECT 
+                    r.recipe_id, r.title, r.difficulty, r.time_needed, r.image_url,
+                    u.username AS AuthorName, 
+                    c.name AS CategoryName,
+                    ISNULL(rs.total_favorites, 0) AS TotalFavorites,
+                    ISNULL(rs.avg_rating, 0) AS AverageRating
+                FROM Recipes r
+                JOIN Users u ON r.user_id = u.user_id
+                LEFT JOIN Categories c ON r.category_id = c.category_id
+                LEFT JOIN Recipe_Stats rs ON r.recipe_id = rs.recipe_id
+                WHERE r.user_id = @authorUserId
+                ORDER BY r.created_at DESC";
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@authorUserId", authorUserId);
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                recipes.Add(MapRecipeFromReader(reader));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi khi lấy công thức theo tác giả: " + ex.Message);
+            }
+            return recipes;
+        }
+
+        /// <summary>
+        /// (Hàm mới) Lấy tất cả danh mục (Categories) cho ComboBox
+        /// </summary>
+        public List<Category> GetCategories()
+        {
+            List<Category> categories = new List<Category>();
+            string query = "SELECT category_id, name FROM Categories ORDER BY name";
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                categories.Add(new Category
+                                {
+                                    CategoryId = (int)reader["category_id"],
+                                    Name = (string)reader["name"]
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi khi lấy Categories: " + ex.Message);
+            }
+            return categories;
+        }
+
+
         #endregion
 
         #region === UPDATE (Cập nhật) ===
 
         /// <summary>
-        /// Cập nhật thông tin công thức (bao gồm Ingredients và Steps).
+        /// Cập nhật thông tin công thức.
         /// Sử dụng SP 'UpdateRecipe'.
         /// </summary>
         /// <param name="recipe">Đối tượng Recipe đã được cập nhật thông tin</param>
         /// <returns>True nếu thành công</returns>
         public bool UpdateRecipe(Recipe recipe)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                SqlTransaction transaction = connection.BeginTransaction();
-
-                try
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    // --- Bước 1: Cập nhật thông tin chính (dùng SP UpdateRecipe) ---
-                    // Lưu ý: SP 'UpdateRecipe' của bạn không tự xử lý category_name,
-                    // nên chúng ta cần lấy category_id trước.
-                    int? categoryId = GetOrCreateCategoryId(recipe.CategoryName, connection, transaction);
+                    connection.Open();
+                    // --- Cập nhật (dùng SP UpdateRecipe) ---
+                    // SP 'UpdateRecipe' của bạn đã bao gồm logic
+                    // tự tìm Category ID, rất tốt!
 
-                    using (SqlCommand cmd = new SqlCommand("UpdateRecipe", connection, transaction))
+                    // === NÂNG CẤP ===
+                    // (Code trong 'frmAddRecipie' của bạn dùng 1 câu SQL dài
+                    // thay vì SP 'UpdateRecipe'. Ở đây tôi sẽ dùng
+                    // SP 'UpdateRecipe' có sẵn trong CSDL của bạn
+                    // để code C# sạch hơn)
+
+                    using (SqlCommand cmd = new SqlCommand("UpdateRecipe", connection))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddWithValue("@recipe_id", recipe.RecipeId);
+
+                        // Lấy Category ID (vì SP UpdateRecipe cần ID)
+                        int? categoryId = GetOrCreateCategoryId(recipe.CategoryName, connection, null);
                         cmd.Parameters.AddWithValue("@category_id", (object)categoryId ?? DBNull.Value);
+
                         cmd.Parameters.AddWithValue("@title", recipe.Title);
                         cmd.Parameters.AddWithValue("@difficulty", recipe.Difficulty);
                         cmd.Parameters.AddWithValue("@time_needed", recipe.TimeNeeded);
                         cmd.Parameters.AddWithValue("@image_url", (object)recipe.ImageUrl ?? DBNull.Value);
 
-                        // SP 'UpdateRecipe' của bạn thiếu 2 trường ingredients và steps
-                        // (Điều này là ĐÚNG vì chúng ta đã chuẩn hóa CSDL)
-                        // Chúng ta sẽ bỏ 2 tham số đó khỏi SP call.
+                        // Gửi 2 chuỗi NVARCHAR(MAX)
+                        cmd.Parameters.AddWithValue("@ingredients", (object)recipe.Ingredients ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@steps", (object)recipe.Steps ?? DBNull.Value);
 
                         cmd.ExecuteNonQuery();
+                        return true;
                     }
-
-                    // --- Bước 2: Xóa Ingredients và Steps cũ ---
-                    // (Đây là cách đơn giản nhất để cập nhật)
-                    using (SqlCommand cmdDelete = new SqlCommand(
-                        "DELETE FROM Ingredients WHERE recipe_id = @recipe_id; DELETE FROM Steps WHERE recipe_id = @recipe_id;",
-                        connection, transaction))
-                    {
-                        cmdDelete.Parameters.AddWithValue("@recipe_id", recipe.RecipeId);
-                        cmdDelete.ExecuteNonQuery();
-                    }
-
-                    // --- Bước 3 & 4: Thêm lại Ingredients và Steps mới (giống hệt AddNewRecipe) ---
-                    if (recipe.Ingredients != null && recipe.Ingredients.Count > 0)
-                    {
-                        foreach (var ingredient in recipe.Ingredients)
-                        {
-                            string query = "INSERT INTO Ingredients (recipe_id, name, quantity) VALUES (@recipe_id, @name, @quantity)";
-                            using (SqlCommand cmdIng = new SqlCommand(query, connection, transaction))
-                            {
-                                cmdIng.Parameters.AddWithValue("@recipe_id", recipe.RecipeId);
-                                cmdIng.Parameters.AddWithValue("@name", ingredient.Name);
-                                cmdIng.Parameters.AddWithValue("@quantity", (object)ingredient.Quantity ?? DBNull.Value);
-                                cmdIng.ExecuteNonQuery();
-                            }
-                        }
-                    }
-
-                    if (recipe.Steps != null && recipe.Steps.Count > 0)
-                    {
-                        foreach (var step in recipe.Steps)
-                        {
-                            string query = "INSERT INTO Steps (recipe_id, step_number, instruction) VALUES (@recipe_id, @step_number, @instruction)";
-                            using (SqlCommand cmdStep = new SqlCommand(query, connection, transaction))
-                            {
-                                cmdStep.Parameters.AddWithValue("@recipe_id", recipe.RecipeId);
-                                cmdStep.Parameters.AddWithValue("@step_number", step.StepNumber);
-                                cmdStep.Parameters.AddWithValue("@instruction", step.Instruction);
-                                cmdStep.ExecuteNonQuery();
-                            }
-                        }
-                    }
-
-                    transaction.Commit();
-                    return true;
                 }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    Console.WriteLine("Lỗi khi cập nhật công thức: " + ex.Message);
-                    return false;
-                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi khi cập nhật công thức: " + ex.Message);
+                return false;
             }
         }
 
