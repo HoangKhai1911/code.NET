@@ -1,4 +1,5 @@
-﻿namespace WinCook
+﻿//frmAdd-EditRecipie.Designer.cs
+namespace WinCook
 {
     partial class frmAddRecipie
     {

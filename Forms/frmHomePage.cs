@@ -1,4 +1,5 @@
-﻿using System;
+﻿//frmHomePage.cs
+using System;
 using System.Linq;
 using System.Windows.Forms;
 using WinCook.Services;
@@ -113,11 +114,13 @@ namespace WinCook
         }
 
         // (Nhóm B) Nút "Profiles" (guna2Button4)
+        // (Nhóm B) Nút "Profiles" (guna2Button4)
         private void BtnProfiles_Click(object sender, EventArgs e)
         {
-            // Giả định "Profiles" sẽ mở form "My Recipes"
-            OpenForm(new frmMyRecipes()); // <-- Tên form từ screenshot của bạn
+            // Mở đúng form Profiles
+            OpenForm(new frmProfile());
         }
+
 
         #endregion
 

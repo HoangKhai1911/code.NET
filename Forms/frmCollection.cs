@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Forms/frmCollection.cs
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -42,14 +43,14 @@ namespace WinCook
 
             // === SỬA LỖI DESIGNER (CS0103) ===
             // Gán sự kiện thủ công (bỏ qua file Designer)
-            guna2Button1.Click += guna2Button1_Click; // Home
-            guna2Button3.Click += guna2Button3_Click; // Recipes
-            guna2Button5.Click += guna2Button5_Click; // Favorites
-            guna2Button2.Click += guna2Button2_Click; // Collections (hiện tại)
-            guna2Button4.Click += guna2Button4_Click; // Profiles
-            guna2Button6.Click += guna2Button6_Click; // Search
-            guna2Button7.Click += guna2Button7_Click; // Add
-            guna2Button8.Click += guna2Button8_Click; // Delete
+            //guna2Button1.Click += guna2Button1_Click; // Home
+            //guna2Button3.Click += guna2Button3_Click; // Recipes
+            //guna2Button5.Click += guna2Button5_Click; // Favorites
+            //guna2Button2.Click += guna2Button2_Click; // Collections (hiện tại)
+            //guna2Button4.Click += guna2Button4_Click; // Profiles
+            //guna2Button6.Click += guna2Button6_Click; // Search
+            //guna2Button7.Click += guna2Button7_Click; // Add
+            //guna2Button8.Click += guna2Button8_Click; // Delete
         }
 
         private void frmCollection_Load(object sender, EventArgs e)

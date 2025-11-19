@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Forms/frmProfile.cs
+using System;
 using System.Windows.Forms;
 using WinCook.Services; // <-- Thêm Service
 using WinCook.Models;   // <-- Thêm Model
