@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Services/RecipeService.cs
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -66,22 +67,24 @@ namespace WinCook.Services
         /// <summary>
         /// Lấy tất cả công thức để hiển thị trên trang chủ (chưa bao gồm Ingredients/Steps).
         /// </summary>
+
         public List<Recipe> GetAllRecipes()
         {
             List<Recipe> recipes = new List<Recipe>();
-            // Sử dụng View Recipe_Stats để lấy thông tin tổng hợp
+
             string query = @"
-                SELECT 
-                    r.recipe_id, r.title, r.difficulty, r.time_needed, r.image_url,
-                    u.username AS AuthorName, 
-                    c.name AS CategoryName,
-                    ISNULL(rs.total_favorites, 0) AS TotalFavorites,
-                    ISNULL(rs.avg_rating, 0) AS AverageRating
-                FROM Recipes r
-                JOIN Users u ON r.user_id = u.user_id
-                LEFT JOIN Categories c ON r.category_id = c.category_id
-                LEFT JOIN Recipe_Stats rs ON r.recipe_id = rs.recipe_id
-                ORDER BY r.created_at DESC"; // Sắp xếp theo món mới nhất
+        SELECT 
+            r.recipe_id,
+            r.title,
+            r.difficulty,
+            r.time_needed,
+            r.image_url,
+            u.username AS AuthorName,
+            c.name AS CategoryName
+        FROM Recipes r
+        LEFT JOIN Users u ON r.user_id = u.user_id
+        LEFT JOIN Categories c ON r.category_id = c.category_id
+        ORDER BY r.created_at DESC";
 
             try
             {
@@ -89,23 +92,26 @@ namespace WinCook.Services
                 {
                     connection.Open();
                     using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlDataReader reader = command.ExecuteReader())
                     {
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        while (reader.Read())
                         {
-                            while (reader.Read())
-                            {
-                                recipes.Add(MapRecipeFromReader(reader));
-                            }
+                            recipes.Add(MapRecipeFromReader(reader));
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Lỗi khi lấy tất cả công thức: " + ex.Message);
+                MessageBox.Show("Lỗi SQL GetAllRecipes: " + ex.Message);
             }
+
+            // DEBUG: show số lượng recipe đọc được
+            //MessageBox.Show("GetAllRecipes đọc được: " + recipes.Count + " món");
+
             return recipes;
         }
+
 
         /// <summary>
         /// Lấy chi tiết đầy đủ của 1 công thức (bao gồm Ingredients và Steps).
@@ -165,23 +171,25 @@ namespace WinCook.Services
         /// <summary>
         /// (Chức năng Nhóm A - Fuc) Tìm kiếm công thức theo Tiêu đề.
         /// </summary>
+
         public List<Recipe> SearchRecipesByTitle(string searchTerm)
         {
             List<Recipe> recipes = new List<Recipe>();
-            // Dùng View Recipe_Stats
+
             string query = @"
-                SELECT 
-                    r.recipe_id, r.title, r.difficulty, r.time_needed, r.image_url,
-                    u.username AS AuthorName, 
-                    c.name AS CategoryName,
-                    ISNULL(rs.total_favorites, 0) AS TotalFavorites,
-                    ISNULL(rs.avg_rating, 0) AS AverageRating
-                FROM Recipes r
-                JOIN Users u ON r.user_id = u.user_id
-                LEFT JOIN Categories c ON r.category_id = c.category_id
-                LEFT JOIN Recipe_Stats rs ON r.recipe_id = rs.recipe_id
-                WHERE r.title LIKE @searchTerm
-                ORDER BY r.created_at DESC";
+        SELECT 
+            r.recipe_id,
+            r.title,
+            r.difficulty,
+            r.time_needed,
+            r.image_url,
+            u.username AS AuthorName,
+            c.name AS CategoryName
+        FROM Recipes r
+        JOIN Users u ON r.user_id = u.user_id
+        LEFT JOIN Categories c ON r.category_id = c.category_id
+        WHERE r.title LIKE @searchTerm
+        ORDER BY r.created_at DESC";
 
             try
             {
@@ -205,6 +213,7 @@ namespace WinCook.Services
             {
                 Console.WriteLine("Lỗi khi tìm kiếm công thức: " + ex.Message);
             }
+
             return recipes;
         }
 
@@ -220,13 +229,12 @@ namespace WinCook.Services
                 SELECT 
                     r.recipe_id, r.title, r.difficulty, r.time_needed, r.image_url,
                     u.username AS AuthorName, 
-                    c.name AS CategoryName,
-                    ISNULL(rs.total_favorites, 0) AS TotalFavorites,
-                    ISNULL(rs.avg_rating, 0) AS AverageRating
+                    c.name AS CategoryName
+                    
                 FROM Recipes r
                 JOIN Users u ON r.user_id = u.user_id
                 LEFT JOIN Categories c ON r.category_id = c.category_id
-                LEFT JOIN Recipe_Stats rs ON r.recipe_id = rs.recipe_id
+               
                 WHERE r.category_id = @categoryId
                 ORDER BY r.created_at DESC";
 
@@ -266,13 +274,12 @@ namespace WinCook.Services
                 SELECT 
                     r.recipe_id, r.title, r.difficulty, r.time_needed, r.image_url,
                     u.username AS AuthorName, 
-                    c.name AS CategoryName,
-                    ISNULL(rs.total_favorites, 0) AS TotalFavorites,
-                    ISNULL(rs.avg_rating, 0) AS AverageRating
+                    c.name AS CategoryName
+                    
                 FROM Recipes r
                 JOIN Users u ON r.user_id = u.user_id
                 LEFT JOIN Categories c ON r.category_id = c.category_id
-                LEFT JOIN Recipe_Stats rs ON r.recipe_id = rs.recipe_id
+               
                 WHERE r.user_id = @authorUserId
                 ORDER BY r.created_at DESC";
 
@@ -474,16 +481,17 @@ namespace WinCook.Services
             return new Recipe
             {
                 RecipeId = Convert.ToInt32(reader["recipe_id"]),
-                Title = reader["title"].ToString(),
-                Difficulty = reader["difficulty"].ToString(),
-                TimeNeeded = reader["time_needed"].ToString(),
-                ImageUrl = reader["image_url"].ToString(),
-                AuthorName = reader["AuthorName"].ToString(),
-                CategoryName = reader["CategoryName"].ToString(),
-                TotalFavorites = Convert.ToInt32(reader["TotalFavorites"]),
-                AverageRating = Convert.ToDouble(reader["AverageRating"])
+                Title = reader["title"]?.ToString(),
+                Difficulty = reader["difficulty"]?.ToString(),
+                TimeNeeded = reader["time_needed"]?.ToString(),
+                ImageUrl = reader["image_url"]?.ToString(),
+                AuthorName = reader["AuthorName"]?.ToString(),
+                CategoryName = reader["CategoryName"]?.ToString(),
+                TotalFavorites = 0,
+                AverageRating = 0
             };
         }
+
 
         #endregion
     }

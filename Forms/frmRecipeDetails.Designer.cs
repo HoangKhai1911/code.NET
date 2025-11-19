@@ -1,4 +1,5 @@
-﻿namespace WinCook
+﻿//Forms/frmRecipeDetails.Designer.cs
+namespace WinCook
 {
     partial class frmRecipeDetails
     {
