@@ -40,18 +40,9 @@ namespace WinCook
             }
 
             // === Gán sự kiện (khớp với file Designer của bạn) ===
-            this.Load += frmRecipes_Load;
+            
 
-            // Menu
-            guna2Button1.Click += guna2Button1_Click; // Home
-            guna2Button2.Click += guna2Button2_Click; // Recipes
-            guna2Button5.Click += guna2Button5_Click; // Favorites
-            guna2Button3.Click += guna2Button3_Click; // Collections
-            guna2Button4.Click += guna2Button4_Click; // Profiles
-
-            // Chức năng
-            guna2Button6.Click += guna2Button6_Click; // Search
-            guna2Button7.Click += guna2Button7_Click; // Add (Nút '+')
+           
 
             // === SỬA LỖI ĐIỀU HƯỚNG ===
             // Gán sự kiện FormClosing (khi bấm nút 'X')
@@ -390,12 +381,14 @@ namespace WinCook
         }
 
         // Favorites
+        // Favorites
         private void guna2Button5_Click(object sender, EventArgs e)
         {
-            var f = Application.OpenForms.OfType<frmMyFavRecipes>().FirstOrDefault();
-            if (f == null) f = new frmMyFavRecipes();
+            // LUÔN tạo form Favorites mới để nó load lại danh sách từ Service
+            var f = new frmMyFavRecipes();
             OpenForm(f);
         }
+
 
         // Collections
         private void guna2Button3_Click(object sender, EventArgs e)

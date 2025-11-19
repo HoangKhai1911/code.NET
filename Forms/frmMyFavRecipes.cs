@@ -1,5 +1,4 @@
-﻿//frmMyFavRecipes.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -73,7 +72,6 @@ namespace WinCook
                 // 1. Gọi Service (Tải lại dữ liệu mới nhất mỗi lần load)
                 _allFavoriteRecipes = _interactionService.GetFavoriteRecipes(_currentUserId);
 
-
                 // 2. Lọc (nếu có)
                 List<Recipe> recipesToShow;
                 if (string.IsNullOrWhiteSpace(keyword))
@@ -85,8 +83,9 @@ namespace WinCook
                     // Lọc danh sách đã tải
                     string searchTerm = keyword.ToLower();
                     recipesToShow = _allFavoriteRecipes
-                        .Where(r => r.Title.ToLower().Contains(searchTerm) ||
-                                    r.AuthorName.ToLower().Contains(searchTerm))
+                        .Where(r =>
+                            r.Title.ToLower().Contains(searchTerm) ||
+                            r.AuthorName.ToLower().Contains(searchTerm))
                         .ToList();
                 }
 
@@ -181,7 +180,7 @@ namespace WinCook
         private void OpenForm(Form f)
         {
             f.Show();
-            this.Hide(); // Sửa từ 'Hide()' thành 'Close()'
+            this.Hide(); // Sửa từ 'Hide()' thành 'Close()' (comment cũ của bạn)
         }
 
         // ===== Thanh menu trên cùng của frmMyFavRecipes =====
@@ -228,14 +227,6 @@ namespace WinCook
         private void FrmMyFavRecipes_FormClosing(object sender, FormClosingEventArgs e)
         {
             // Chỉ xử lý khi người dùng bấm 'X'
-            // (Nếu chúng ta gọi this.Close() trong OpenForm,
-            // 'isNavigating' SẼ KHÔNG CÓ, nên e.CloseReason SẼ LÀ UserClosing
-            // -> Lỗi logic cũ.
-            // Cần sửa lại OpenForm
-
-            // Tạm thời sửa lại logic check:
-            // Chỉ tìm HomePage nếu form đó ĐÃ TỪNG MỞ (Visible = false)
-
             if (e.CloseReason == CloseReason.UserClosing)
             {
                 // Tìm frmHomePage CŨ (đang bị ẩn) và hiển thị lại
@@ -263,11 +254,12 @@ namespace WinCook
         #endregion
 
         // (Đây là các hàm rỗng từ file v1 của bạn, giữ lại để tránh lỗi Designer)
-        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e) { }
+        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+        }
 
         private void guna2Button15_Click(object sender, EventArgs e)
         {
-
         }
     }
 }

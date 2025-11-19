@@ -57,8 +57,6 @@ namespace WinCook
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges26 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges27 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges28 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges29 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges30 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             guna2GradientPanel1 = new Guna.UI2.WinForms.Guna2GradientPanel();
             guna2ControlBox8 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2ControlBox6 = new Guna.UI2.WinForms.Guna2ControlBox();
@@ -87,7 +85,6 @@ namespace WinCook
             guna2HtmlLabel10 = new Guna.UI2.WinForms.Guna2HtmlLabel();
             richTextBox1 = new RichTextBox();
             guna2Button1 = new Guna.UI2.WinForms.Guna2Button();
-            guna2Button2 = new Guna.UI2.WinForms.Guna2Button();
             richTextBox2 = new RichTextBox();
             guna2GradientPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)guna2PictureBox1).BeginInit();
@@ -431,32 +428,13 @@ namespace WinCook
             guna2Button1.FillColor = Color.DarkSalmon;
             guna2Button1.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
             guna2Button1.ForeColor = Color.White;
-            guna2Button1.Location = new Point(603, 488);
+            guna2Button1.Location = new Point(685, 489);
             guna2Button1.Name = "guna2Button1";
             guna2Button1.ShadowDecoration.CustomizableEdges = customizableEdges28;
             guna2Button1.Size = new Size(142, 43);
             guna2Button1.TabIndex = 44;
             guna2Button1.Text = "Add";
             guna2Button1.Click += guna2Button1_Click;
-            // 
-            // guna2Button2
-            // 
-            guna2Button2.BorderRadius = 20;
-            guna2Button2.CustomizableEdges = customizableEdges29;
-            guna2Button2.DisabledState.BorderColor = Color.DarkGray;
-            guna2Button2.DisabledState.CustomBorderColor = Color.DarkGray;
-            guna2Button2.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
-            guna2Button2.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
-            guna2Button2.FillColor = Color.Brown;
-            guna2Button2.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            guna2Button2.ForeColor = Color.White;
-            guna2Button2.Location = new Point(777, 488);
-            guna2Button2.Name = "guna2Button2";
-            guna2Button2.ShadowDecoration.CustomizableEdges = customizableEdges30;
-            guna2Button2.Size = new Size(142, 43);
-            guna2Button2.TabIndex = 45;
-            guna2Button2.Text = "Delete";
-            guna2Button2.Click += guna2Button2_Click;
             // 
             // richTextBox2
             // 
@@ -474,7 +452,6 @@ namespace WinCook
             BackColor = Color.SeaShell;
             ClientSize = new Size(943, 575);
             Controls.Add(richTextBox2);
-            Controls.Add(guna2Button2);
             Controls.Add(guna2Button1);
             Controls.Add(richTextBox1);
             Controls.Add(guna2HtmlLabel10);
@@ -532,7 +509,6 @@ namespace WinCook
         private Guna.UI2.WinForms.Guna2HtmlLabel guna2HtmlLabel10;
         private RichTextBox richTextBox1;
         private Guna.UI2.WinForms.Guna2Button guna2Button1;
-        private Guna.UI2.WinForms.Guna2Button guna2Button2;
         private RichTextBox richTextBox2;
     }
 }
