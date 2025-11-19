@@ -182,6 +182,7 @@ namespace WinCook
             guna2Button15 = new Guna.UI2.WinForms.Guna2Button();
             guna2Button16 = new Guna.UI2.WinForms.Guna2Button();
             guna2Button17 = new Guna.UI2.WinForms.Guna2Button();
+            label1 = new Label();
             guna2GradientPanel1.SuspendLayout();
             panel1.SuspendLayout();
             panel2.SuspendLayout();
@@ -367,7 +368,7 @@ namespace WinCook
             // panel13
             // 
             panel13.BackColor = Color.Black;
-            panel13.Location = new Point(2, 86);
+            panel13.Location = new Point(2, 141);
             panel13.Name = "panel13";
             panel13.Size = new Size(943, 3);
             panel13.TabIndex = 58;
@@ -383,7 +384,7 @@ namespace WinCook
             guna2Button7.FillColor = Color.YellowGreen;
             guna2Button7.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
             guna2Button7.ForeColor = Color.White;
-            guna2Button7.Location = new Point(766, 107);
+            guna2Button7.Location = new Point(766, 162);
             guna2Button7.Name = "guna2Button7";
             guna2Button7.ShadowDecoration.CustomizableEdges = customizableEdges26;
             guna2Button7.Size = new Size(142, 43);
@@ -401,7 +402,7 @@ namespace WinCook
             guna2Button6.FillColor = Color.DarkSalmon;
             guna2Button6.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             guna2Button6.ForeColor = Color.White;
-            guna2Button6.Location = new Point(322, 114);
+            guna2Button6.Location = new Point(322, 169);
             guna2Button6.Name = "guna2Button6";
             guna2Button6.ShadowDecoration.CustomizableEdges = customizableEdges28;
             guna2Button6.Size = new Size(113, 36);
@@ -422,7 +423,7 @@ namespace WinCook
             guna2TextBox1.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
             guna2TextBox1.Font = new Font("Segoe UI", 9F);
             guna2TextBox1.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
-            guna2TextBox1.Location = new Point(13, 105);
+            guna2TextBox1.Location = new Point(13, 160);
             guna2TextBox1.Margin = new Padding(3, 4, 3, 4);
             guna2TextBox1.Name = "guna2TextBox1";
             guna2TextBox1.PlaceholderText = "";
@@ -435,7 +436,7 @@ namespace WinCook
             // 
             flowLayoutPanel1.Anchor = AnchorStyles.None;
             flowLayoutPanel1.AutoScroll = true;
-            flowLayoutPanel1.Location = new Point(2, 161);
+            flowLayoutPanel1.Location = new Point(2, 216);
             flowLayoutPanel1.Margin = new Padding(20);
             flowLayoutPanel1.Name = "flowLayoutPanel1";
             flowLayoutPanel1.Padding = new Padding(40, 10, 20, 10);
@@ -1275,10 +1276,10 @@ namespace WinCook
             guna2Button13.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button13.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
             guna2Button13.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
-            guna2Button13.FillColor = Color.DarkSalmon;
+            guna2Button13.FillColor = Color.Transparent;
             guna2Button13.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            guna2Button13.ForeColor = Color.White;
-            guna2Button13.Location = new Point(198, 47);
+            guna2Button13.ForeColor = Color.Black;
+            guna2Button13.Location = new Point(26, 102);
             guna2Button13.Name = "guna2Button13";
             guna2Button13.ShadowDecoration.CustomizableEdges = customizableEdges52;
             guna2Button13.Size = new Size(97, 33);
@@ -1297,7 +1298,7 @@ namespace WinCook
             guna2Button14.FillColor = Color.Transparent;
             guna2Button14.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             guna2Button14.ForeColor = Color.Black;
-            guna2Button14.Location = new Point(298, 47);
+            guna2Button14.Location = new Point(179, 102);
             guna2Button14.Name = "guna2Button14";
             guna2Button14.ShadowDecoration.CustomizableEdges = customizableEdges54;
             guna2Button14.Size = new Size(115, 32);
@@ -1313,10 +1314,10 @@ namespace WinCook
             guna2Button15.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button15.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
             guna2Button15.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
-            guna2Button15.FillColor = Color.Transparent;
+            guna2Button15.FillColor = Color.DarkSalmon;
             guna2Button15.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            guna2Button15.ForeColor = Color.Black;
-            guna2Button15.Location = new Point(405, 47);
+            guna2Button15.ForeColor = Color.White;
+            guna2Button15.Location = new Point(391, 98);
             guna2Button15.Name = "guna2Button15";
             guna2Button15.ShadowDecoration.CustomizableEdges = customizableEdges56;
             guna2Button15.Size = new Size(108, 36);
@@ -1335,7 +1336,7 @@ namespace WinCook
             guna2Button16.FillColor = Color.Transparent;
             guna2Button16.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             guna2Button16.ForeColor = Color.Black;
-            guna2Button16.Location = new Point(508, 47);
+            guna2Button16.Location = new Point(597, 98);
             guna2Button16.Name = "guna2Button16";
             guna2Button16.ShadowDecoration.CustomizableEdges = customizableEdges58;
             guna2Button16.Size = new Size(125, 36);
@@ -1354,7 +1355,7 @@ namespace WinCook
             guna2Button17.FillColor = Color.Transparent;
             guna2Button17.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
             guna2Button17.ForeColor = Color.Black;
-            guna2Button17.Location = new Point(622, 47);
+            guna2Button17.Location = new Point(823, 98);
             guna2Button17.Name = "guna2Button17";
             guna2Button17.ShadowDecoration.CustomizableEdges = customizableEdges60;
             guna2Button17.Size = new Size(108, 36);
@@ -1362,12 +1363,23 @@ namespace WinCook
             guna2Button17.Text = "Profiles";
             guna2Button17.Click += guna2Button4_Click;
             // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Font = new Font("Brush Script MT", 25.8000011F, FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point, 0);
+            label1.Location = new Point(296, 36);
+            label1.Name = "label1";
+            label1.Size = new Size(364, 54);
+            label1.TabIndex = 65;
+            label1.Text = "Your Favorite Recipes";
+            // 
             // frmMyFavRecipes
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.SeaShell;
             ClientSize = new Size(943, 575);
+            Controls.Add(label1);
             Controls.Add(guna2Button17);
             Controls.Add(guna2Button16);
             Controls.Add(guna2Button15);
@@ -1405,6 +1417,7 @@ namespace WinCook
             panel10.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox5).EndInit();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -1501,5 +1514,6 @@ namespace WinCook
         private Guna.UI2.WinForms.Guna2Button guna2Button15;
         private Guna.UI2.WinForms.Guna2Button guna2Button16;
         private Guna.UI2.WinForms.Guna2Button guna2Button17;
+        private Label label1;
     }
 }
