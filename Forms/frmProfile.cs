@@ -220,5 +220,15 @@ namespace WinCook
         {
 
         }
+
+        private void chart1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void frmProfile_Load_1(object sender, EventArgs e)
+        {
+
+        }
     }
 }
