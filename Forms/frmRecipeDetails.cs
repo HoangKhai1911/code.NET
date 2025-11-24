@@ -1,4 +1,7 @@
-﻿using System;
+﻿using WinCook.Controls;
+using WinCook.Models;
+using WinCook.Services;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -7,7 +10,7 @@ namespace WinCook
 {
     public partial class frmRecipeDetails : Form
     {
-        // Service
+        // Services
         private readonly RecipeService _recipeService;
         private readonly InteractionService _interactionService;
         private readonly UtilityService _utilityService;
@@ -28,35 +31,69 @@ namespace WinCook
             _utilityService = new UtilityService();
             _recipeId = id;
 
-            // Kiểm tra đăng nhập an toàn
-            if (AuthManager.IsLoggedIn && AuthManager.CurrentUser != null)
-            {
-                _currentUserId = AuthManager.CurrentUser.UserId;
-            }
-            else
-            {
-                _currentUserId = 0; // Chế độ khách (hoặc xử lý tùy ý)
-            }
+            _currentUserId = (AuthManager.IsLoggedIn && AuthManager.CurrentUser != null)
+                                ? AuthManager.CurrentUser.UserId
+                                : 0;
 
             this.Load += (s, e) => LoadDetails();
 
-            // Gán sự kiện nút (Kiểm tra null để tránh lỗi nếu control chưa được khởi tạo)
-            if (guna2Button1 != null) guna2Button1.Click += btnAddToCollection_Click;
-            if (guna2Button2 != null) guna2Button2.Click += btnFavorite_Click;
+            guna2Button1.Click += btnAddToCollection_Click;
+            guna2Button2.Click += btnFavorite_Click;
+            button1.Click += button1_Click;
+            button2.Click += btnPostComment_Click;
 
-            // Tìm và gán sự kiện cho nút Đăng bình luận
-            var btnPost = this.Controls.Find("button2", true).FirstOrDefault() as Guna2Button;
-            if (btnPost != null) btnPost.Click += btnPostComment_Click;
+            DebugServices();
+        }
 
-            // Nút Quay lại (button1) - Xử lý cho cả trường hợp nút nằm trực tiếp trên Form hoặc trong Panel
-            if (button1 != null)
+        /* GIỮ LẠI VÀ IMPLEMENT PHƯƠNG THỨC flpComments_Paint
+        private void flpComments_Paint(object sender, PaintEventArgs e)
+        {
+            // Custom painting cho FlowLayoutPanel
+            try
             {
-                button1.Click += button1_Click;
+                // Vẽ border cho flpComments
+                using (Pen borderPen = new Pen(Color.LightGray, 1))
+                {
+                    e.Graphics.DrawRectangle(borderPen,
+                        new Rectangle(0, 0, flpComments.Width - 1, flpComments.Height - 1));
+                }
+
+                // Nếu không có comments, có thể vẽ thông báo
+                if (flpComments.Controls.Count == 0)
+                {
+                    string message = "Chưa có đánh giá nào";
+                    using (Font messageFont = new Font("Segoe UI", 9, FontStyle.Italic))
+                    using (SolidBrush messageBrush = new SolidBrush(Color.Gray))
+                    {
+                        SizeF textSize = e.Graphics.MeasureString(message, messageFont);
+                        float x = (flpComments.Width - textSize.Width) / 2;
+                        float y = (flpComments.Height - textSize.Height) / 2;
+
+                        e.Graphics.DrawString(message, messageFont, messageBrush, x, y);
+                    }
+                }
             }
-            else
+            catch (Exception ex)
             {
-                var btnBack = this.Controls.Find("button1", true).FirstOrDefault() as Button;
-                if (btnBack != null) btnBack.Click += button1_Click;
+                // Xử lý lỗi painting nếu có
+                Console.WriteLine($"Lỗi trong flpComments_Paint: {ex.Message}");
+            }
+        }
+        */
+
+
+        private void DebugServices()
+        {
+            try
+            {
+                Console.WriteLine($"RecipeService: {_recipeService != null}");
+                Console.WriteLine($"InteractionService: {_interactionService != null}");
+                Console.WriteLine($"Current User ID: {_currentUserId}");
+                Console.WriteLine($"Recipe ID: {_recipeId}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Debug Error: {ex.Message}");
             }
         }
 
@@ -64,87 +101,49 @@ namespace WinCook
         {
             try
             {
-                // 1. Tải thông tin từ Service nếu chưa có
-                if (_currentRecipe == null)
-                {
-                    _currentRecipe = _recipeService.GetRecipeDetails(_recipeId);
-                }
+                _currentRecipe ??= _recipeService.GetRecipeDetails(_recipeId);
 
-                // Kiểm tra nếu không tìm thấy recipe (có thể do ID sai hoặc DB lỗi)
                 if (_currentRecipe == null)
                 {
-                    MessageBox.Show("Không tìm thấy dữ liệu công thức.", "Lỗi");
+                    MessageBox.Show("Không tìm thấy dữ liệu công thức.");
                     this.Close();
                     return;
                 }
 
-                // 2. Gán dữ liệu lên UI (Kiểm tra null cho từng control để tránh lỗi hiển thị)
-                if (guna2HtmlLabel3 != null) guna2HtmlLabel3.Text = _currentRecipe.Title;
-                if (guna2HtmlLabel5 != null) guna2HtmlLabel5.Text = _currentRecipe.AuthorName;
-                if (guna2HtmlLabel7 != null) guna2HtmlLabel7.Text = _currentRecipe.CategoryName;
+                guna2HtmlLabel3.Text = _currentRecipe.Title;
+                guna2HtmlLabel5.Text = _currentRecipe.AuthorName;
+                guna2HtmlLabel7.Text = _currentRecipe.CategoryName;
+                guna2HtmlLabel11.Text = _currentRecipe.TimeNeeded ?? "N/A";
+                guna2HtmlLabel9.Text = _currentRecipe.Difficulty ?? "Medium";
 
-                if (guna2HtmlLabel11 != null)
-                    guna2HtmlLabel11.Text = !string.IsNullOrEmpty(_currentRecipe.TimeNeeded) ? _currentRecipe.TimeNeeded : "N/A";
+                if (!string.IsNullOrEmpty(_currentRecipe.ImageUrl) && System.IO.File.Exists(_currentRecipe.ImageUrl))
+                    pictureBox1.ImageLocation = _currentRecipe.ImageUrl;
 
-                if (guna2HtmlLabel9 != null)
-                    guna2HtmlLabel9.Text = !string.IsNullOrEmpty(_currentRecipe.Difficulty) ? _currentRecipe.Difficulty : "Medium";
-
-                // Tải ảnh (Xử lý ngoại lệ riêng cho ảnh để không ảnh hưởng luồng chính)
-                if (pictureBox1 != null && !string.IsNullOrEmpty(_currentRecipe.ImageUrl))
-                {
-                    try
-                    {
-                        if (System.IO.File.Exists(_currentRecipe.ImageUrl))
-                            pictureBox1.ImageLocation = _currentRecipe.ImageUrl;
-                        // Nếu là URL web thì có thể cần dùng pictureBox1.LoadAsync(_currentRecipe.ImageUrl);
-                    }
-                    catch { }
-                }
-
-                // 3. Tải nội dung Nguyên liệu và Các bước
-                // Quan trọng: Sử dụng toán tử ?? "" để đảm bảo không truyền null vào hàm xử lý chuỗi
                 PopulateIngredients(_currentRecipe.Ingredients ?? "");
                 PopulateSteps(_currentRecipe.Steps ?? "");
 
-                // 4. Tải thông tin tương tác (Yêu thích, Bình luận)
                 LoadInteractionData();
             }
             catch (Exception ex)
             {
-                // Nếu có lỗi bất ngờ, hiện thông báo chi tiết để debug
-                MessageBox.Show("Lỗi hiển thị chi tiết: " + ex.Message);
+                MessageBox.Show("Lỗi: " + ex.Message);
             }
         }
 
-        private void PopulateIngredients(string ingredientsText)
+        private void PopulateIngredients(string text)
         {
-            if (guna2HtmlLabel12 == null) return;
-
-            if (!string.IsNullOrEmpty(ingredientsText))
-            {
-                // Thay xuống dòng bằng <br> cho Guna Label hiển thị đẹp (nếu dùng HTML render)
-                // Hoặc giữ nguyên \n nếu GunaLabel của bạn không bật HTML formatting
-                guna2HtmlLabel12.Text = ingredientsText.Replace("\n", "<br>");
-            }
-            else
-            {
-                guna2HtmlLabel12.Text = "(Không có nguyên liệu)";
-            }
+            guna2HtmlLabel12.Text =
+                string.IsNullOrEmpty(text)
+                ? "(Không có nguyên liệu)"
+                : text.Replace("\n", "<br>");
         }
 
-        private void PopulateSteps(string stepsText)
+        private void PopulateSteps(string text)
         {
-            if (guna2HtmlLabel15 == null) return;
-
-            if (!string.IsNullOrEmpty(stepsText))
-            {
-                // Thay xuống dòng bằng <br><br> để thoáng mắt
-                guna2HtmlLabel15.Text = stepsText.Replace("\n", "<br><br>");
-            }
-            else
-            {
-                guna2HtmlLabel15.Text = "(Chưa có bước làm)";
-            }
+            guna2HtmlLabel15.Text =
+                string.IsNullOrEmpty(text)
+                ? "(Chưa có bước làm)"
+                : text.Replace("\n", "<br><br>");
         }
 
         private void LoadInteractionData()
@@ -153,6 +152,7 @@ namespace WinCook
 
             _isCurrentlyFavorite = _interactionService.IsRecipeFavorited(_currentUserId, _recipeId);
             UpdateFavoriteButtonVisuals();
+
             LoadAllRatings();
         }
 
@@ -160,124 +160,174 @@ namespace WinCook
         {
             try
             {
-                List<Rating> ratings = _interactionService.GetRatingsForRecipe(_recipeId);
+                var ratings = _interactionService.GetRatingsForRecipe(_recipeId);
 
-                // Tìm FlowLayoutPanel chứa comment
-                Control container = this.Controls.Find("flpComments", true).FirstOrDefault();
-                if (container == null) return;
+                flpComments.Controls.Clear();
 
-                FlowLayoutPanel flp = (FlowLayoutPanel)container;
-                flp.Controls.Clear();
-
-                // Header số lượng
-                Label lblHeader = new Label();
-                lblHeader.Text = $"Rating Comment ({ratings.Count})";
-                lblHeader.Font = new System.Drawing.Font("Segoe UI", 12, FontStyle.Bold);
-                lblHeader.AutoSize = true;
-                lblHeader.Margin = new Padding(0, 0, 0, 10);
-                flp.Controls.Add(lblHeader);
-
-                if (ratings.Count == 0)
+                // Tiêu đề
+                var titleLabel = new Label
                 {
-                    Label lblEmpty = new Label();
-                    lblEmpty.Text = "Chưa có đánh giá nào.";
-                    lblEmpty.AutoSize = true;
-                    lblEmpty.ForeColor = Color.Gray;
-                    flp.Controls.Add(lblEmpty);
+                    Text = $"Đánh giá & Bình luận ({ratings.Count})",
+                    Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                    AutoSize = true,
+                    Margin = new Padding(0, 0, 0, 10),
+                    ForeColor = Color.FromArgb(64, 64, 64)
+                };
+                flpComments.Controls.Add(titleLabel);
+
+                if (!ratings.Any())
+                {
+                    var emptyLabel = new Label
+                    {
+                        Text = "Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá!",
+                        AutoSize = true,
+                        ForeColor = Color.Gray,
+                        Font = new Font("Segoe UI", 9),
+                        Margin = new Padding(0, 10, 0, 20)
+                    };
+                    flpComments.Controls.Add(emptyLabel);
                     return;
                 }
 
-                // Hiển thị comment (có giới hạn)
-                int count = 0;
-                foreach (var rating in ratings)
+                foreach (var r in ratings.Take(_commentLimit))
                 {
-                    if (count >= _commentLimit) break;
-
-                    // Đảm bảo ucCommentItem đã được tạo đúng
-                    ucCommentItem item = new ucCommentItem(rating);
-                    // Chỉnh width trừ đi thanh cuộn (khoảng 25px)
-                    item.Width = flp.ClientSize.Width > 25 ? flp.ClientSize.Width - 25 : 300;
-                    flp.Controls.Add(item);
-                    count++;
+                    var item = new ucCommentItem(r);
+                    item.Width = flpComments.ClientSize.Width - 25;
+                    item.Margin = new Padding(0, 0, 0, 10);
+                    flpComments.Controls.Add(item);
                 }
 
-                // Nút Xem thêm
                 if (ratings.Count > _commentLimit)
                 {
-                    Button btnMore = new Button();
-                    btnMore.Text = "Xem thêm...";
-                    btnMore.Click += (s, e) => { _commentLimit += 10; LoadAllRatings(); };
-                    flp.Controls.Add(btnMore);
+                    var btnMore = new Button
+                    {
+                        Text = "Xem thêm...",
+                        BackColor = Color.LightBlue,
+                        FlatStyle = FlatStyle.Flat,
+                        Margin = new Padding(0, 10, 0, 0)
+                    };
+                    btnMore.Click += (s, e) =>
+                    {
+                        _commentLimit += 10;
+                        LoadAllRatings();
+                    };
+                    flpComments.Controls.Add(btnMore);
                 }
             }
-            catch { /* Bỏ qua lỗi load comment để không ảnh hưởng UI chính */ }
-        }
-
-        // --- CÁC SỰ KIỆN ---
-
-        private void btnFavorite_Click(object sender, EventArgs e)
-        {
-            if (_currentUserId == 0) { MessageBox.Show("Cần đăng nhập!"); return; }
-
-            if (_isCurrentlyFavorite) _interactionService.RemoveFavorite(_currentUserId, _recipeId);
-            else _interactionService.AddFavorite(_currentUserId, _recipeId);
-
-            _isCurrentlyFavorite = !_isCurrentlyFavorite;
-            UpdateFavoriteButtonVisuals();
-        }
-
-        private void UpdateFavoriteButtonVisuals()
-        {
-            if (guna2Button2 == null) return;
-            if (_isCurrentlyFavorite)
-                guna2Button2.FillColor = Color.FromArgb(255, 128, 128); // Màu đỏ nhạt (Đã thích)
-            else
-                guna2Button2.FillColor = Color.LightSalmon; // Màu gốc (Chưa thích)
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tải đánh giá: {ex.Message}");
+            }
         }
 
         private void btnPostComment_Click(object sender, EventArgs e)
         {
-            if (_currentUserId == 0) { MessageBox.Show("Cần đăng nhập!"); return; }
-
-            float score = 0;
-            // Tìm control rating
-            var ratingControl = this.Controls.Find("rsMyRating", true).FirstOrDefault() as Guna2RatingStar;
-            if (ratingControl == null) ratingControl = this.Controls.Find("guna2RatingStar1", true).FirstOrDefault() as Guna2RatingStar;
-            if (ratingControl != null) score = ratingControl.Value;
-
-            // Tìm control comment
-            string comment = "";
-            var txtControl = this.Controls.Find("txtMyComment", true).FirstOrDefault() as Guna2TextBox;
-            if (txtControl == null) txtControl = this.Controls.Find("guna2TextBox1", true).FirstOrDefault() as Guna2TextBox;
-
-            if (txtControl != null) comment = txtControl.Text.Trim();
-
-            if (score <= 0)
+            try
             {
-                MessageBox.Show("Vui lòng chọn số sao!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Console.WriteLine("btnPostComment_Click được gọi!");
+
+                if (_currentUserId == 0)
+                {
+                    MessageBox.Show("Vui lòng đăng nhập để đánh giá!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                int score = (int)rsMyRating.Value;
+                string comment = guna2TextBox1.Text.Trim();
+
+                Console.WriteLine($"Score: {score}, Comment: {comment}");
+
+                // Validate
+                if (score == 0)
+                {
+                    MessageBox.Show("Vui lòng chọn số sao đánh giá!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(comment))
+                {
+                    MessageBox.Show("Vui lòng nhập nội dung bình luận!", "Thông báo",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var newRating = new Rating
+                {
+                    UserId = _currentUserId,
+                    RecipeId = _recipeId,
+                    Score = score,
+                    Comment = comment,
+                    CreatedAt = DateTime.Now,
+                    Username = AuthManager.CurrentUser?.Username ?? "Ẩn danh"
+                };
+
+                Console.WriteLine("Đang gọi AddOrUpdateRating...");
+                bool success = _interactionService.AddOrUpdateRating(newRating);
+
+                if (success)
+                {
+                    MessageBox.Show("Đã gửi đánh giá thành công!", "Thành công",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // Reset form
+                    guna2TextBox1.Clear();
+                    rsMyRating.Value = 0;
+
+                    // Reload comments
+                    _commentLimit = 10;
+                    LoadAllRatings();
+                }
+                else
+                {
+                    MessageBox.Show("Có lỗi xảy ra khi lưu đánh giá. Vui lòng thử lại!", "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi hệ thống",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Console.WriteLine($"EXCEPTION: {ex}");
+            }
+        }
+
+        private void btnFavorite_Click(object sender, EventArgs e)
+        {
+            if (_currentUserId == 0)
+            {
+                MessageBox.Show("Cần đăng nhập!");
                 return;
             }
 
-            Rating newRating = new Rating
+            try
             {
-                UserId = _currentUserId,
-                RecipeId = _recipeId,
-                Score = (int)Math.Round(score),
-                Comment = comment
-            };
+                if (_isCurrentlyFavorite)
+                    _interactionService.RemoveFavorite(_currentUserId, _recipeId);
+                else
+                    _interactionService.AddFavorite(_currentUserId, _recipeId);
 
-            if (_interactionService.AddOrUpdateRating(newRating))
-            {
-                MessageBox.Show("Đánh giá thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                if (txtControl != null) txtControl.Clear();
-                if (ratingControl != null) ratingControl.Value = 0;
-                _commentLimit = 10;
-                LoadAllRatings(); // Reload lại comment ngay lập tức
+                _isCurrentlyFavorite = !_isCurrentlyFavorite;
+                UpdateFavoriteButtonVisuals();
+
+                MessageBox.Show(_isCurrentlyFavorite ? "Đã thêm vào yêu thích!" : "Đã xóa khỏi yêu thích!",
+                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khi lưu đánh giá.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Lỗi: {ex.Message}");
             }
+        }
+
+        private void UpdateFavoriteButtonVisuals()
+        {
+            guna2Button2.FillColor =
+                _isCurrentlyFavorite
+                ? Color.FromArgb(255, 128, 128)
+                : Color.LightSalmon;
+
+            guna2Button2.Text = _isCurrentlyFavorite ? "❤️ Đã thích" : "🤍 Thích";
         }
 
         private void btnAddToCollection_Click(object sender, EventArgs e)
@@ -290,7 +340,7 @@ namespace WinCook
             this.Close();
         }
 
-        // Các hàm placeholder để tránh lỗi Designer (giữ nguyên)
+        // Các sự kiện phụ khác
         private void label1_Click(object sender, EventArgs e) { }
         private void guna2RatingStar1_ValueChanged(object sender, EventArgs e) { }
         private void BtnDelete_Click(object sender, EventArgs e) { }
