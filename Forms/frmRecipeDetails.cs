@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using WinCook.Models;
-using WinCook.Services;
-using WinCook.Controls;
-using Guna.UI2.WinForms;
 
 namespace WinCook
 {
