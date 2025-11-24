@@ -56,7 +56,7 @@ namespace WinCook
             this.FormClosing += FrmMyFavRecipes_FormClosing;
         }
 
-        private void frmMyFavRecipes_Load(object sender, EventArgs e)
+        private void frmMyFavRecipes_Load(object? sender, EventArgs e)
         {
             // Tải danh sách công thức
             LoadFavorites();
@@ -67,7 +67,7 @@ namespace WinCook
         /// <summary>
         /// (Nhóm B) Tải tất cả công thức YÊU THÍCH từ Service
         /// </summary>
-        private void LoadFavorites(string keyword = null)
+        private void LoadFavorites(string? keyword = null)
         {
             try
             {
@@ -238,10 +238,10 @@ namespace WinCook
                 // ========== CLICK mở chi tiết ==========
                 int recipeId = r.RecipeId;
 
-                void openDetail(object s, EventArgs e)
+                void openDetail(object? s, EventArgs e)
                 {
                     var recipe = _controller.GetRecipeDetails(recipeId);
-                    using (var f = new frmRecipeDetails(recipe))
+                    using (var f = new frmRecipeDetails(recipeId))
                         f.ShowDialog();
 
                     LoadFavorites();
@@ -263,7 +263,7 @@ namespace WinCook
         /// <summary>
         /// (Nhóm A/B) Được gọi khi bấm vào bất kỳ thẻ 'ucRecipeCard' nào
         /// </summary>
-        private void OnRecipeCardClicked(object sender, EventArgs e)
+        private void OnRecipeCardClicked(object? sender, EventArgs e)
         {
             if (sender is ucRecipeCard card)
             {
@@ -277,8 +277,8 @@ namespace WinCook
                     return;
                 }
 
-                // ✅ Truyền MODEL Recipe vào form Details
-                using (var frmDetail = new frmRecipeDetails(recipe))
+                // ✅ Truyền ID Recipe vào form Details (constructor expects int)
+                using (var frmDetail = new frmRecipeDetails(recipeId))
                 {
                     frmDetail.ShowDialog();
                 }
@@ -295,7 +295,7 @@ namespace WinCook
         #region === Sự kiện Nút bấm Chức năng (Nhóm B) ===
 
         // Search (Nút 'guna2Button6')
-        private void guna2Button6_Click(object sender, EventArgs e)
+        private void guna2Button6_Click(object? sender, EventArgs e)
         {
             // Lấy keyword từ ô search (Giả định tên là 'guna2TextBox1' - theo code cũ)
             string keyword = guna2TextBox1.Text.Trim();
@@ -318,7 +318,7 @@ namespace WinCook
         // ===== Thanh menu trên cùng của frmMyFavRecipes =====
 
         // Home
-        private void guna2Button1_Click(object sender, EventArgs e)
+        private void guna2Button1_Click(object? sender, EventArgs e)
         {
             var f = Application.OpenForms.OfType<frmHomePage>().FirstOrDefault();
             if (f == null) f = new frmHomePage();
@@ -326,7 +326,7 @@ namespace WinCook
         }
 
         // Recipes
-        private void guna2Button2_Click(object sender, EventArgs e)
+        private void guna2Button2_Click(object? sender, EventArgs e)
         {
             var f = Application.OpenForms.OfType<frmRecipes>().FirstOrDefault();
             if (f == null) f = new frmRecipes();
@@ -334,13 +334,13 @@ namespace WinCook
         }
 
         // Favorites (đang ở đây nên không làm gì)
-        private void guna2Button5_Click(object sender, EventArgs e)
+        private void guna2Button5_Click(object? sender, EventArgs e)
         {
             // Đang ở Favorites, không cần chuyển
         }
 
         // Collections
-        private void guna2Button3_Click(object sender, EventArgs e)
+        private void guna2Button3_Click(object? sender, EventArgs e)
         {
             var f = Application.OpenForms.OfType<frmCollection>().FirstOrDefault();
             if (f == null) f = new frmCollection();
@@ -348,7 +348,7 @@ namespace WinCook
         }
 
         // Profiles
-        private void guna2Button4_Click(object sender, EventArgs e)
+        private void guna2Button4_Click(object? sender, EventArgs e)
         {
             var f = Application.OpenForms.OfType<frmProfile>().FirstOrDefault();
             if (f == null) f = new frmProfile();
@@ -356,7 +356,7 @@ namespace WinCook
         }
 
         // === HÀM MỚI: XỬ LÝ KHI BẤM NÚT 'X' ===
-        private void FrmMyFavRecipes_FormClosing(object sender, FormClosingEventArgs e)
+        private void FrmMyFavRecipes_FormClosing(object? sender, FormClosingEventArgs e)
         {
             // Chỉ xử lý khi người dùng bấm 'X'
             if (e.CloseReason == CloseReason.UserClosing)
@@ -386,11 +386,11 @@ namespace WinCook
         #endregion
 
         // (Đây là các hàm rỗng từ file v1 của bạn, giữ lại để tránh lỗi Designer)
-        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        private void flowLayoutPanel1_Paint(object? sender, PaintEventArgs e)
         {
         }
 
-        private void guna2Button15_Click(object sender, EventArgs e)
+        private void guna2Button15_Click(object? sender, EventArgs e)
         {
         }
     }

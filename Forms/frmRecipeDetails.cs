@@ -1,134 +1,134 @@
-﻿//Forms/frmRecipeDetails.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using WinCook.Models;
 using WinCook.Services;
-using System.Linq; // Cần cho hàm OfType
-using System.Data;
+using WinCook.Controls;
 using Guna.UI2.WinForms;
-using System.Drawing; // Cần cho màu sắc
 
 namespace WinCook
 {
     public partial class frmRecipeDetails : Form
     {
-        // Khai báo các Service cần dùng
+        // Service
         private readonly RecipeService _recipeService;
         private readonly InteractionService _interactionService;
-        private readonly UtilityService _utilityService; // Thêm Service Nhóm C
+        private readonly UtilityService _utilityService;
 
-        // Biến lưu trữ trạng thái
+        // Trạng thái
         private readonly int _recipeId;
         private readonly int _currentUserId;
-
-        // SỬA LỖI CS8618: Thêm dấu ? để cho phép _currentRecipe là null
-        private Recipe? _currentRecipe; // Lưu trữ công thức gốc 
+        private Recipe _currentRecipe;
         private bool _isCurrentlyFavorite;
+        private int _commentLimit = 10;
 
-        /// <summary>
-        /// Constructor: Phải nhận vào recipeId để biết tải món nào
-        /// </summary>
         public frmRecipeDetails(int id)
         {
             InitializeComponent();
 
             _recipeService = new RecipeService();
             _interactionService = new InteractionService();
-            _utilityService = new UtilityService(); // Khởi tạo UtilityService
-
+            _utilityService = new UtilityService();
             _recipeId = id;
 
-            // Lấy ID người dùng đang đăng nhập (Rất quan trọng cho Nhóm B)
-            if (AuthManager.IsLoggedIn)
+            // Kiểm tra đăng nhập an toàn
+            if (AuthManager.IsLoggedIn && AuthManager.CurrentUser != null)
             {
                 _currentUserId = AuthManager.CurrentUser.UserId;
             }
             else
             {
-                MessageBox.Show("Bạn phải đăng nhập để xem chi tiết.");
-                this.Close();
-                return; // Dừng lại nếu chưa đăng nhập
+                _currentUserId = 0; // Chế độ khách (hoặc xử lý tùy ý)
             }
 
-            // Gán sự kiện
             this.Load += (s, e) => LoadDetails();
 
-            // === CẬP NHẬT LOGIC NÚT ===
-            // 1. (Nút TAG) Gán sự kiện 'Thêm vào Bộ sưu tập' cho guna2Button1
-            guna2Button1.Click += btnAddToCollection_Click;
+            // Gán sự kiện nút (Kiểm tra null để tránh lỗi nếu control chưa được khởi tạo)
+            if (guna2Button1 != null) guna2Button1.Click += btnAddToCollection_Click;
+            if (guna2Button2 != null) guna2Button2.Click += btnFavorite_Click;
 
-            // 2. (Nút TIM) Gán sự kiện 'Yêu thích' cho guna2Button2
-            guna2Button2.Click += btnFavorite_Click;
+            // Tìm và gán sự kiện cho nút Đăng bình luận
+            var btnPost = this.Controls.Find("button2", true).FirstOrDefault() as Guna2Button;
+            if (btnPost != null) btnPost.Click += btnPostComment_Click;
 
-            // Gán sự kiện cho các nút mới của Nhóm B & C
-            // (Bạn cần bỏ comment các dòng này sau khi thêm control vào Designer)
-            // btnSaveRating.Click += btnSaveRating_Click;
-            // btnSaveNote.Click += btnSaveNote_Click;
-            // nudServingsFactor.ValueChanged += nudServingsFactor_ValueChanged;
-            // btnCookingMode.Click += btnCookingMode_Click;
+            // Nút Quay lại (button1) - Xử lý cho cả trường hợp nút nằm trực tiếp trên Form hoặc trong Panel
+            if (button1 != null)
+            {
+                button1.Click += button1_Click;
+            }
+            else
+            {
+                var btnBack = this.Controls.Find("button1", true).FirstOrDefault() as Button;
+                if (btnBack != null) btnBack.Click += button1_Click;
+            }
         }
 
-
-        #region === Tải Dữ Liệu (Load) ===
-
-        /// <summary>
-        /// (Nhóm A) Tải thông tin chính của công thức (Tên, Ảnh, Nguyên liệu, Các bước)
-        /// THAY THẾ logic LoadDetails() cũ bằng Service
-        /// </summary>
         private void LoadDetails()
         {
-            // Nếu chưa có dữ liệu (đi từ constructor int id)
-            if (_currentRecipe == null)
+            try
             {
-                _currentRecipe = _recipeService.GetRecipeDetails(_recipeId);
-            }
+                // 1. Tải thông tin từ Service nếu chưa có
+                if (_currentRecipe == null)
+                {
+                    _currentRecipe = _recipeService.GetRecipeDetails(_recipeId);
+                }
 
-            if (_currentRecipe == null)
+                // Kiểm tra nếu không tìm thấy recipe (có thể do ID sai hoặc DB lỗi)
+                if (_currentRecipe == null)
+                {
+                    MessageBox.Show("Không tìm thấy dữ liệu công thức.", "Lỗi");
+                    this.Close();
+                    return;
+                }
+
+                // 2. Gán dữ liệu lên UI (Kiểm tra null cho từng control để tránh lỗi hiển thị)
+                if (guna2HtmlLabel3 != null) guna2HtmlLabel3.Text = _currentRecipe.Title;
+                if (guna2HtmlLabel5 != null) guna2HtmlLabel5.Text = _currentRecipe.AuthorName;
+                if (guna2HtmlLabel7 != null) guna2HtmlLabel7.Text = _currentRecipe.CategoryName;
+
+                if (guna2HtmlLabel11 != null)
+                    guna2HtmlLabel11.Text = !string.IsNullOrEmpty(_currentRecipe.TimeNeeded) ? _currentRecipe.TimeNeeded : "N/A";
+
+                if (guna2HtmlLabel9 != null)
+                    guna2HtmlLabel9.Text = !string.IsNullOrEmpty(_currentRecipe.Difficulty) ? _currentRecipe.Difficulty : "Medium";
+
+                // Tải ảnh (Xử lý ngoại lệ riêng cho ảnh để không ảnh hưởng luồng chính)
+                if (pictureBox1 != null && !string.IsNullOrEmpty(_currentRecipe.ImageUrl))
+                {
+                    try
+                    {
+                        if (System.IO.File.Exists(_currentRecipe.ImageUrl))
+                            pictureBox1.ImageLocation = _currentRecipe.ImageUrl;
+                        // Nếu là URL web thì có thể cần dùng pictureBox1.LoadAsync(_currentRecipe.ImageUrl);
+                    }
+                    catch { }
+                }
+
+                // 3. Tải nội dung Nguyên liệu và Các bước
+                // Quan trọng: Sử dụng toán tử ?? "" để đảm bảo không truyền null vào hàm xử lý chuỗi
+                PopulateIngredients(_currentRecipe.Ingredients ?? "");
+                PopulateSteps(_currentRecipe.Steps ?? "");
+
+                // 4. Tải thông tin tương tác (Yêu thích, Bình luận)
+                LoadInteractionData();
+            }
+            catch (Exception ex)
             {
-                MessageBox.Show("Không thể tải chi tiết công thức.", "Lỗi");
-                this.Close();
-                return;
+                // Nếu có lỗi bất ngờ, hiện thông báo chi tiết để debug
+                MessageBox.Show("Lỗi hiển thị chi tiết: " + ex.Message);
             }
-
-            // Bước 2: GÁN DỮ LIỆU LÊN UI
-            guna2HtmlLabel3.Text = _currentRecipe.Title;
-            guna2HtmlLabel5.Text = _currentRecipe.AuthorName;
-            guna2HtmlLabel7.Text = _currentRecipe.CategoryName;
-            guna2HtmlLabel11.Text = !string.IsNullOrEmpty(_currentRecipe.TimeNeeded)
-                                        ? _currentRecipe.TimeNeeded : "N/A";
-            guna2HtmlLabel9.Text = !string.IsNullOrEmpty(_currentRecipe.Difficulty)
-                                        ? _currentRecipe.Difficulty : "Medium";
-
-            string imagePath = _currentRecipe.ImageUrl;
-            if (!string.IsNullOrEmpty(imagePath) && System.IO.File.Exists(imagePath))
-                pictureBox1.ImageLocation = imagePath;
-            else
-                pictureBox1.Image = null;
-
-            PopulateIngredients(_currentRecipe.Ingredients);
-            PopulateSteps(_currentRecipe.Steps);
-
-            LoadInteractionData();
-        }
-        // ✅ Constructor mới: nhận thẳng model Recipe
-        public frmRecipeDetails(Recipe recipe) : this(recipe.RecipeId)
-        {
-            // Gán sẵn model để LoadDetails không phải gọi DB nữa
-            _currentRecipe = recipe;
         }
 
-        /// <summary>
-        /// (Nhóm C) Hiển thị danh sách nguyên liệu lên Guna Label
-        /// (Nâng cấp từ code của bạn)
-        /// SỬA LỖI CS1503: Đổi tham số từ List<T> sang string
-        /// </summary>
-        private void PopulateIngredients(string ingredientsText) // <-- Đã đổi
+        private void PopulateIngredients(string ingredientsText)
         {
+            if (guna2HtmlLabel12 == null) return;
+
             if (!string.IsNullOrEmpty(ingredientsText))
             {
-                // Guna HTML Label hỗ trợ <br> tốt hơn \n
-                // Thay thế \n (từ CSDL) bằng <br>
+                // Thay xuống dòng bằng <br> cho Guna Label hiển thị đẹp (nếu dùng HTML render)
+                // Hoặc giữ nguyên \n nếu GunaLabel của bạn không bật HTML formatting
                 guna2HtmlLabel12.Text = ingredientsText.Replace("\n", "<br>");
             }
             else
@@ -137,17 +137,13 @@ namespace WinCook
             }
         }
 
-        /// <summary>
-        /// (Nhóm A) Hiển thị các bước làm lên Guna Label
-        /// (Nâng cấp từ code của bạn)
-        /// SỬA LỖI CS1503: Đổi tham số từ List<T> sang string
-        /// </summary>
-        private void PopulateSteps(string stepsText) // <-- Đã đổi
+        private void PopulateSteps(string stepsText)
         {
+            if (guna2HtmlLabel15 == null) return;
+
             if (!string.IsNullOrEmpty(stepsText))
             {
-                // Thay thế \n (từ CSDL) bằng <br><br> (cho đẹp)
-                // (Chúng ta không thể in đậm "Bước 1:" vì nó là 1 khối text)
+                // Thay xuống dòng bằng <br><br> để thoáng mắt
                 guna2HtmlLabel15.Text = stepsText.Replace("\n", "<br><br>");
             }
             else
@@ -156,232 +152,157 @@ namespace WinCook
             }
         }
 
-
-        /// <summary>
-        /// (Nhóm B - Tổng tài audio) Tải các thông tin tương tác
-        /// </summary>
         private void LoadInteractionData()
         {
-            // 1. Tải trạng thái Yêu thích
+            if (_currentUserId == 0) return;
+
             _isCurrentlyFavorite = _interactionService.IsRecipeFavorited(_currentUserId, _recipeId);
-            // Cập nhật Giao diện Nút Tim (guna2Button2)
             UpdateFavoriteButtonVisuals();
-
-            // 2. Tải Ghi chú cá nhân
-            var note = _interactionService.GetNote(_currentUserId, _recipeId);
-            // if (note != null && txtMyNote != null)
-            // {
-            //     txtMyNote.Text = note.NoteText;
-            // }
-
-            // 3. Tải các bình luận/đánh giá
             LoadAllRatings();
         }
 
-        /// <summary>
-        /// (Nhóm B) Tải lại danh sách bình luận (dùng khi mới lưu)
-        /// </summary>
         private void LoadAllRatings()
         {
-            List<Rating> ratings = _interactionService.GetRatingsForRecipe(_recipeId);
+            try
+            {
+                List<Rating> ratings = _interactionService.GetRatingsForRecipe(_recipeId);
 
-            // Giả định bạn dùng DataGridView 'dgvComments'
-            // if (dgvComments != null)
-            // {
-            //     dgvComments.DataSource = null;
-            //     dgvComments.DataSource = ratings;
+                // Tìm FlowLayoutPanel chứa comment
+                Control container = this.Controls.Find("flpComments", true).FirstOrDefault();
+                if (container == null) return;
 
-            //     // Tùy chỉnh các cột
-            //     dgvComments.Columns["RatingId"].Visible = false;
-            //     dgvComments.Columns["UserId"].Visible = false;
-            //     dgvComments.Columns["RecipeId"].Visible = false;
-            //     dgvComments.Columns["Username"].HeaderText = "Người dùng";
-            //     dgvComments.Columns["Score"].HeaderText = "Điểm";
-            //     dgvComments.Columns["Comment"].HeaderText = "Bình luận";
-            //     dgvComments.Columns["Comment"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            //     dgvComments.Columns["CreatedAt"].HeaderText = "Ngày";
-            // }
+                FlowLayoutPanel flp = (FlowLayoutPanel)container;
+                flp.Controls.Clear();
+
+                // Header số lượng
+                Label lblHeader = new Label();
+                lblHeader.Text = $"Rating Comment ({ratings.Count})";
+                lblHeader.Font = new System.Drawing.Font("Segoe UI", 12, FontStyle.Bold);
+                lblHeader.AutoSize = true;
+                lblHeader.Margin = new Padding(0, 0, 0, 10);
+                flp.Controls.Add(lblHeader);
+
+                if (ratings.Count == 0)
+                {
+                    Label lblEmpty = new Label();
+                    lblEmpty.Text = "Chưa có đánh giá nào.";
+                    lblEmpty.AutoSize = true;
+                    lblEmpty.ForeColor = Color.Gray;
+                    flp.Controls.Add(lblEmpty);
+                    return;
+                }
+
+                // Hiển thị comment (có giới hạn)
+                int count = 0;
+                foreach (var rating in ratings)
+                {
+                    if (count >= _commentLimit) break;
+
+                    // Đảm bảo ucCommentItem đã được tạo đúng
+                    ucCommentItem item = new ucCommentItem(rating);
+                    // Chỉnh width trừ đi thanh cuộn (khoảng 25px)
+                    item.Width = flp.ClientSize.Width > 25 ? flp.ClientSize.Width - 25 : 300;
+                    flp.Controls.Add(item);
+                    count++;
+                }
+
+                // Nút Xem thêm
+                if (ratings.Count > _commentLimit)
+                {
+                    Button btnMore = new Button();
+                    btnMore.Text = "Xem thêm...";
+                    btnMore.Click += (s, e) => { _commentLimit += 10; LoadAllRatings(); };
+                    flp.Controls.Add(btnMore);
+                }
+            }
+            catch { /* Bỏ qua lỗi load comment để không ảnh hưởng UI chính */ }
         }
 
-        #endregion
+        // --- CÁC SỰ KIỆN ---
 
-        #region === Xử Lý Sự Kiện (Nhóm A, B, C) ===
-
-        // (Hàm này không còn được dùng, giữ lại để tránh lỗi Designer)
-        private void BtnDelete_Click(object sender, EventArgs e)
-        {
-            // (Giữ rỗng)
-        }
-
-        /// <summary>
-        /// (Nhóm B) Sự kiện click nút Yêu thích (NÚT TIM - guna2Button2)
-        /// </summary>
         private void btnFavorite_Click(object sender, EventArgs e)
         {
-            // Đảo ngược trạng thái
-            if (_isCurrentlyFavorite)
-            {
-                // Đang yêu thích -> Bỏ yêu thích
-                _interactionService.RemoveFavorite(_currentUserId, _recipeId);
-            }
-            else
-            {
-                // Chưa yêu thích -> Thêm yêu thích
-                _interactionService.AddFavorite(_currentUserId, _recipeId);
-            }
+            if (_currentUserId == 0) { MessageBox.Show("Cần đăng nhập!"); return; }
 
-            // Cập nhật trạng thái
+            if (_isCurrentlyFavorite) _interactionService.RemoveFavorite(_currentUserId, _recipeId);
+            else _interactionService.AddFavorite(_currentUserId, _recipeId);
+
             _isCurrentlyFavorite = !_isCurrentlyFavorite;
-
-            // Cập nhật Giao diện (màu sắc)
             UpdateFavoriteButtonVisuals();
         }
 
-        /// <summary>
-        /// (Hàm mới) Cập nhật màu sắc cho nút Tim
-        /// </summary>
         private void UpdateFavoriteButtonVisuals()
         {
+            if (guna2Button2 == null) return;
             if (_isCurrentlyFavorite)
+                guna2Button2.FillColor = Color.FromArgb(255, 128, 128); // Màu đỏ nhạt (Đã thích)
+            else
+                guna2Button2.FillColor = Color.LightSalmon; // Màu gốc (Chưa thích)
+        }
+
+        private void btnPostComment_Click(object sender, EventArgs e)
+        {
+            if (_currentUserId == 0) { MessageBox.Show("Cần đăng nhập!"); return; }
+
+            float score = 0;
+            // Tìm control rating
+            var ratingControl = this.Controls.Find("rsMyRating", true).FirstOrDefault() as Guna2RatingStar;
+            if (ratingControl == null) ratingControl = this.Controls.Find("guna2RatingStar1", true).FirstOrDefault() as Guna2RatingStar;
+            if (ratingControl != null) score = ratingControl.Value;
+
+            // Tìm control comment
+            string comment = "";
+            var txtControl = this.Controls.Find("txtMyComment", true).FirstOrDefault() as Guna2TextBox;
+            if (txtControl == null) txtControl = this.Controls.Find("guna2TextBox1", true).FirstOrDefault() as Guna2TextBox;
+
+            if (txtControl != null) comment = txtControl.Text.Trim();
+
+            if (score <= 0)
             {
-                // Đổi màu nút (guna2Button2) sang màu Đỏ (hoặc màu yêu thích của bạn)
-                guna2Button2.FillColor = Color.FromArgb(255, 128, 128); // Màu đỏ nhạt
+                MessageBox.Show("Vui lòng chọn số sao!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Rating newRating = new Rating
+            {
+                UserId = _currentUserId,
+                RecipeId = _recipeId,
+                Score = (int)Math.Round(score),
+                Comment = comment
+            };
+
+            if (_interactionService.AddOrUpdateRating(newRating))
+            {
+                MessageBox.Show("Đánh giá thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (txtControl != null) txtControl.Clear();
+                if (ratingControl != null) ratingControl.Value = 0;
+                _commentLimit = 10;
+                LoadAllRatings(); // Reload lại comment ngay lập tức
             }
             else
             {
-                // Đổi màu nút (guna2Button2) về màu mặc định (màu cam nhạt)
-                guna2Button2.FillColor = Color.LightSalmon;
+                MessageBox.Show("Lỗi khi lưu đánh giá.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-
-        /// <summary>
-        /// (Nhóm B) Sự kiện click nút Lưu vào Bộ sưu tập (NÚT TAG - guna2Button1)
-        /// </summary>
         private void btnAddToCollection_Click(object sender, EventArgs e)
         {
-            // (Hàm này giả định tên control là 'guna2Button1')
-
-            // 1. Lấy danh sách Collection của user
-            List<Collection> collections = _interactionService.GetUserCollections(_currentUserId);
-
-            // 2. Hiển thị một form/dialog mới cho phép user chọn 1 Collection
-            //    (Bạn cần tạo 1 form mới, ví dụ: frmSelectCollection)
-
-            // GIẢ ĐỊNH: Bạn có 1 form tên là frmCollection (theo screenshot)
-            // Chúng ta sẽ mở nó
-            frmCollection collectionForm = new frmCollection();
-
-            // Code tạm thời
-            MessageBox.Show("Chức năng 'Thêm vào Bộ sưu tập' đang được phát triển! \n(Cần tạo frmSelectCollection.cs)");
-            // collectionForm.ShowDialog();
+            MessageBox.Show("Tính năng đang phát triển.");
         }
 
-
-        /// <summary>
-        /// (Nhóm B) Sự kiện click nút Lưu Đánh giá
-        /// </summary>
-        private void btnSaveRating_Click(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
-            // Giả định tên control: rsMyRating (Guna2RatingStar), txtMyComment
-            // int score = (int)rsMyRating.Value;
-            // string comment = txtMyComment.Text.Trim();
-
-            // if (score == 0)
-            // {
-            //     MessageBox.Show("Vui lòng chấm điểm (chọn sao) trước khi lưu.");
-            //     return;
-            // }
-
-            // Rating newRating = new Rating
-            // {
-            //     UserId = _currentUserId,
-            //     RecipeId = _recipeId,
-            //     Score = score,
-            //     Comment = comment
-            // };
-
-            // bool success = _interactionService.AddOrUpdateRating(newRating);
-            // if (success)
-            // {
-            //     MessageBox.Show("Đã lưu đánh giá của bạn!");
-            //     LoadAllRatings(); // Tải lại danh sách bình luận
-            //     // Tải lại điểm trung bình
-            //     var avgRating = _recipeService.GetRecipeDetails(_recipeId).AverageRating;
-            //     lblAvgRating.Text = avgRating.ToString("F1") + " sao";
-            // }
-            // else
-            // {
-            //     MessageBox.Show("Lỗi khi lưu đánh giá.");
-            // }
+            this.Close();
         }
 
-        /// <summary>
-        /// (Nhóm B) Sự kiện click nút Lưu Ghi chú
-        /// </summary>
-        private void btnSaveNote_Click(object sender, EventArgs e)
-        {
-            // Giả định tên control: txtMyNote
-            // string noteText = txtMyNote.Text.Trim();
-
-            // Note myNote = new Note
-            // {
-            //     UserId = _currentUserId,
-            //     RecipeId = _recipeId,
-            //     NoteText = noteText
-            // };
-
-            // bool success = _interactionService.AddOrUpdateNote(myNote);
-            // if (success)
-            // {
-            //     MessageBox.Show("Đã lưu ghi chú cá nhân!");
-            // }
-            // else
-            // {
-            //     MessageBox.Show("Lỗi khi lưu ghi chú.");
-            // }
-        }
-
-        /// <summary>
-        /// (Nhóm C - Fuc) Tự động tính toán lại khẩu phần khi người dùng thay đổi giá trị
-        /// </summary>
-        private void nudServingsFactor_ValueChanged(object sender, EventArgs e)
-        {
-            // Giả định tên control: nudServingsFactor (Guna2NumericUpDown)
-            if (_currentRecipe == null) return; // Đảm bảo _currentRecipe đã được tải
-
-            // double factor = (double)nudServingsFactor.Value;
-
-            // === LƯU Ý: HÀM NÀY SẼ KHÔNG HOẠT ĐỘNG CHÍNH XÁC NỮA ===
-            // (Vì _utilityService.AdjustServings đang mong đợi List<Ingredient>)
-            // (Chúng ta phải viết lại UtilityService để phân tích chuỗi NVARCHAR(MAX),
-            // việc này rất phức tạp và nằm ngoài phạm vi cơ bản)
-
-            MessageBox.Show("Chức năng 'Điều chỉnh khẩu phần' yêu cầu CSDL được chuẩn hóa (bảng Ingredients riêng biệt) mới có thể hoạt động chính xác.", "Thông báo");
-
-            // // Lấy danh sách nguyên liệu gốc (đã lưu trong _currentRecipe)
-            // string originalList = _currentRecipe.Ingredients; // <-- Dòng này LÀ string
-
-            // // Gọi Service để tính toán (Service cũng cần được viết lại)
-            // string adjustedList = _utilityService.AdjustServings(originalList, factor); 
-
-            // // Hiển thị lại danh sách nguyên liệu đã điều chỉnh
-            // PopulateIngredients(adjustedList);
-        }
-
-        /// <summary>
-        /// (Nhóm C) Mở Chế độ Nấu ăn
-        /// </summary>
-        private void btnCookingMode_Click(object sender, EventArgs e)
-        {
-            // Giả định bạn đã tạo 'frmCookingMode' (theo cây thư mục)
-            // if (_currentRecipe != null && !string.IsNullOrEmpty(_currentRecipe.Steps))
-            // {
-            //    frmCookingMode frm = new frmCookingMode(_currentRecipe.Steps); // Gửi chuỗi Steps
-            //    frm.Show();
-            // }
-        }
-
-        #endregion
+        // Các hàm placeholder để tránh lỗi Designer (giữ nguyên)
+        private void label1_Click(object sender, EventArgs e) { }
+        private void guna2RatingStar1_ValueChanged(object sender, EventArgs e) { }
+        private void BtnDelete_Click(object sender, EventArgs e) { }
+        private void nudServingsFactor_ValueChanged(object sender, EventArgs e) { }
+        private void btnCookingMode_Click(object sender, EventArgs e) { }
+        private void btnSaveRating_Click(object sender, EventArgs e) { }
+        private void btnSaveNote_Click(object sender, EventArgs e) { }
+        private void button2_Click(object sender, EventArgs e) { }
     }
 }

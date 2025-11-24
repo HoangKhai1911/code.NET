@@ -19,66 +19,98 @@
         {
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            picImage = new Guna.UI2.WinForms.Guna2PictureBox();
-            lblTitle = new Label();
-            lblAuthor = new Label();
-            ((System.ComponentModel.ISupportInitialize)picImage).BeginInit();
-            SuspendLayout();
+            this.picImage = new Guna.UI2.WinForms.Guna2PictureBox();
+            this.lblTitle = new System.Windows.Forms.Label();
+            this.lblAuthor = new System.Windows.Forms.Label();
+            this.btnFavoriteSmall = new System.Windows.Forms.Label(); // Nút tim nhỏ
+            this.lblRating = new System.Windows.Forms.Label(); // Điểm số (ví dụ: 4.5 ★)
+            ((System.ComponentModel.ISupportInitialize)(this.picImage)).BeginInit();
+            this.SuspendLayout();
             // 
             // picImage
             // 
-            picImage.BorderRadius = 10;
-            picImage.CustomizableEdges = customizableEdges1;
-            picImage.Dock = DockStyle.Top;
-            picImage.ImageLocation = "https://placehold.co/200x150/E8AA8B/ffffff?text=Loading...";
-            picImage.ImageRotate = 0F;
-            picImage.Location = new System.Drawing.Point(10, 10);
-            picImage.Name = "picImage";
-            picImage.ShadowDecoration.CustomizableEdges = customizableEdges2;
-            picImage.Size = new System.Drawing.Size(200, 150);
-            picImage.SizeMode = PictureBoxSizeMode.StretchImage;
-            picImage.TabIndex = 0;
-            picImage.TabStop = false;
+            this.picImage.BorderRadius = 10;
+            this.picImage.CustomizableEdges = customizableEdges1;
+            this.picImage.Dock = System.Windows.Forms.DockStyle.Top;
+            this.picImage.ImageLocation = ""; // Code sẽ set
+            this.picImage.ImageRotate = 0F;
+            this.picImage.Location = new System.Drawing.Point(10, 10);
+            this.picImage.Name = "picImage";
+            this.picImage.ShadowDecoration.CustomizableEdges = customizableEdges2;
+            this.picImage.Size = new System.Drawing.Size(200, 150);
+            this.picImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picImage.TabIndex = 0;
+            this.picImage.TabStop = false;
             // 
             // lblTitle
             // 
-            lblTitle.Font = new Font("Segoe UI", 10.8F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblTitle.Location = new System.Drawing.Point(10, 163);
-            lblTitle.Name = "lblTitle";
-            lblTitle.Size = new System.Drawing.Size(200, 52);
-            lblTitle.TabIndex = 1;
-            lblTitle.Text = "Cánh gà chiên nước mắm";
+            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 10.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTitle.Location = new System.Drawing.Point(10, 165);
+            this.lblTitle.Name = "lblTitle";
+            this.lblTitle.Size = new System.Drawing.Size(200, 48);
+            this.lblTitle.TabIndex = 1;
+            this.lblTitle.Text = "Tên món ăn";
             // 
             // lblAuthor
             // 
-            lblAuthor.AutoSize = true;
-            lblAuthor.Font = new Font("Segoe UI", 9F, FontStyle.Italic, GraphicsUnit.Point, 0);
-            lblAuthor.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            lblAuthor.Location = new System.Drawing.Point(10, 215);
-            lblAuthor.Name = "lblAuthor";
-            lblAuthor.Size = new System.Drawing.Size(89, 20);
-            lblAuthor.TabIndex = 2;
-            lblAuthor.Text = "by tester1";
+            this.lblAuthor.AutoSize = true;
+            this.lblAuthor.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAuthor.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.lblAuthor.Location = new System.Drawing.Point(10, 215);
+            this.lblAuthor.Name = "lblAuthor";
+            this.lblAuthor.Size = new System.Drawing.Size(63, 20);
+            this.lblAuthor.TabIndex = 2;
+            this.lblAuthor.Text = "Author";
+            // 
+            // btnFavoriteSmall
+            // 
+            this.btnFavoriteSmall.AutoSize = true;
+            this.btnFavoriteSmall.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnFavoriteSmall.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
+            this.btnFavoriteSmall.ForeColor = System.Drawing.Color.LightGray; // Mặc định chưa tim
+            this.btnFavoriteSmall.Location = new System.Drawing.Point(185, 165); // Góc phải của tên món
+            this.btnFavoriteSmall.Name = "btnFavoriteSmall";
+            this.btnFavoriteSmall.Size = new System.Drawing.Size(38, 32);
+            this.btnFavoriteSmall.TabIndex = 3;
+            this.btnFavoriteSmall.Text = "♡"; // Tim rỗng
+            // 
+            // lblRating
+            // 
+            this.lblRating.AutoSize = true;
+            this.lblRating.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lblRating.ForeColor = System.Drawing.Color.Goldenrod;
+            this.lblRating.Location = new System.Drawing.Point(150, 215); // Góc phải dưới
+            this.lblRating.Name = "lblRating";
+            this.lblRating.Size = new System.Drawing.Size(44, 20);
+            this.lblRating.TabIndex = 4;
+            this.lblRating.Text = "0.0 ★";
             // 
             // ucRecipeCard
             // 
-            AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
-            AutoScaleMode = AutoScaleMode.Font;
-            BackColor = Color.White;
-            Cursor = Cursors.Hand;
-            Margin = new Padding(10);
-            Name = "ucRecipeCard";
-            Padding = new Padding(10);
-            Size = new System.Drawing.Size(220, 245);
-            ((System.ComponentModel.ISupportInitialize)picImage).EndInit();
-            ResumeLayout(false);
-            PerformLayout();
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.White;
+            this.Controls.Add(this.lblRating);
+            this.Controls.Add(this.btnFavoriteSmall);
+            this.Controls.Add(this.lblAuthor);
+            this.Controls.Add(this.lblTitle);
+            this.Controls.Add(this.picImage);
+            this.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.Margin = new System.Windows.Forms.Padding(10);
+            this.Name = "ucRecipeCard";
+            this.Padding = new System.Windows.Forms.Padding(10);
+            this.Size = new System.Drawing.Size(220, 250);
+            ((System.ComponentModel.ISupportInitialize)(this.picImage)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
         }
 
         #endregion
 
         private Guna.UI2.WinForms.Guna2PictureBox picImage;
-        private Label lblTitle;
-        private Label lblAuthor;
+        private System.Windows.Forms.Label lblTitle;
+        private System.Windows.Forms.Label lblAuthor;
+        public System.Windows.Forms.Label btnFavoriteSmall; // Public để form cha truy cập nếu cần
+        private System.Windows.Forms.Label lblRating;
     }
 }

@@ -41,9 +41,9 @@ namespace WinCook
             }
 
             // === Gán sự kiện (khớp với file Designer của bạn) ===
-            
 
-           
+
+
 
             // === SỬA LỖI ĐIỀU HƯỚNG ===
             // Gán sự kiện FormClosing (khi bấm nút 'X')
@@ -254,7 +254,7 @@ namespace WinCook
 
                 // === CLICK MỞ CHI TIẾT ===
                 int recipeId = r.RecipeId;    // capture local
-                void openDetail(object s, EventArgs e)
+                void openDetail(object? s, EventArgs e)
                 {
                     // Lấy full Recipe từ controller
                     var recipe = _controller.GetRecipeDetails(recipeId);
@@ -264,7 +264,7 @@ namespace WinCook
                         return;
                     }
 
-                    using (var f = new frmRecipeDetails(recipe))  // ⬅️ truyền MODEL
+                    using (var f = new frmRecipeDetails(recipeId))  // ⬅️ truyền RecipeId (int)
                     {
                         f.ShowDialog();
                     }
@@ -294,7 +294,6 @@ namespace WinCook
         {
             if (sender is ucRecipeCard card)
             {
-                // Lấy ID từ thẻ được bấm
                 int recipeId = card.GetRecipeId();
 
                 // Mở form Chi tiết (Nhóm B)
@@ -304,9 +303,9 @@ namespace WinCook
                 // Khi form Chi tiết đóng, nó sẽ quay lại đây...
                 frmDetail.ShowDialog();
 
-                // ...và chúng ta tải lại danh sách
-                // (Để cập nhật nếu người dùng vừa bấm Yêu thích)
-                LoadAllRecipes();
+                // ...và chúng ta tải lại danh sách NGAY LẬP TỨC
+                // (Để cập nhật nếu người dùng vừa bấm Yêu thích/Bỏ yêu thích)
+                LoadAllRecipes(); // <--- DÒNG NÀY GIẢI QUYẾT VẤN ĐỀ ĐỒNG BỘ
             }
         }
 
@@ -415,7 +414,7 @@ namespace WinCook
         }
 
         // === HÀM MỚI: XỬ LÝ KHI BẤM NÚT 'X' ===
-        private void FrmRecipes_FormClosing(object sender, FormClosingEventArgs e)
+        private void FrmRecipes_FormClosing(object? sender, FormClosingEventArgs e)
         {
             if (e.CloseReason == CloseReason.UserClosing)
             {

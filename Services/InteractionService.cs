@@ -1,5 +1,4 @@
-﻿//Services/InteractionService.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -50,7 +49,12 @@ namespace WinCook.Services
         /// </summary>
         public bool AddFavorite(int userId, int recipeId)
         {
-            string query = "INSERT INTO Favorites (user_id, recipe_id) VALUES (@user_id, @recipe_id)";
+            // Dùng IF NOT EXISTS để tránh lỗi trùng lặp
+            string query = @"
+                IF NOT EXISTS (SELECT 1 FROM Favorites WHERE user_id = @user_id AND recipe_id = @recipe_id)
+                BEGIN
+                    INSERT INTO Favorites (user_id, recipe_id) VALUES (@user_id, @recipe_id)
+                END";
             try
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
@@ -61,14 +65,13 @@ namespace WinCook.Services
                         command.Parameters.AddWithValue("@user_id", userId);
                         command.Parameters.AddWithValue("@recipe_id", recipeId);
 
-                        int rowsAffected = command.ExecuteNonQuery();
-                        return rowsAffected > 0;
+                        command.ExecuteNonQuery();
+                        return true; // Coi như thành công
                     }
                 }
             }
             catch (Exception ex)
             {
-                // Có thể lỗi do đã tồn tại (vi phạm Primary Key)
                 Console.WriteLine("Lỗi khi thêm Favorite: " + ex.Message);
                 return false;
             }
@@ -90,8 +93,8 @@ namespace WinCook.Services
                         command.Parameters.AddWithValue("@user_id", userId);
                         command.Parameters.AddWithValue("@recipe_id", recipeId);
 
-                        int rowsAffected = command.ExecuteNonQuery();
-                        return rowsAffected > 0;
+                        command.ExecuteNonQuery();
+                        return true;
                     }
                 }
             }
@@ -108,24 +111,21 @@ namespace WinCook.Services
         public List<Recipe> GetFavoriteRecipes(int userId)
         {
             List<Recipe> recipes = new List<Recipe>();
-
-            // Query chỉ join các bảng chắc chắn đã có: Recipes, Favorites, Users, Categories
+            // Câu query này JOIN 5 bảng và dùng View, khá phức tạp
             string query = @"
-        SELECT 
-            r.recipe_id,
-            r.title,
-            r.difficulty,
-            r.time_needed,
-            r.image_url,
-            u.username AS AuthorName,
-            c.name AS CategoryName
-        FROM Favorites f
-        INNER JOIN Recipes r ON r.recipe_id = f.recipe_id
-        INNER JOIN Users   u ON u.user_id  = r.user_id
-        LEFT  JOIN Categories c ON c.category_id = r.category_id
-        WHERE f.user_id = @user_id
-        ORDER BY f.created_at DESC;
-    ";
+                SELECT 
+                    r.recipe_id, r.title, r.difficulty, r.time_needed, r.image_url,
+                    u.username AS AuthorName, 
+                    c.name AS CategoryName,
+                    ISNULL(rs.total_favorites, 0) AS TotalFavorites,
+                    ISNULL(rs.avg_rating, 0) AS AverageRating
+                FROM Recipes r
+                JOIN Favorites f ON r.recipe_id = f.recipe_id
+                JOIN Users u ON r.user_id = u.user_id
+                LEFT JOIN Categories c ON r.category_id = c.category_id
+                LEFT JOIN Recipe_Stats rs ON r.recipe_id = rs.recipe_id
+                WHERE f.user_id = @user_id
+                ORDER BY f.created_at DESC"; // Sắp xếp theo ngày yêu thích
 
             try
             {
@@ -135,27 +135,24 @@ namespace WinCook.Services
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@user_id", userId);
-
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                var recipe = new Recipe
+                                // Chúng ta tái sử dụng hàm Map của RecipeService (nếu có thể)
+                                // Hoặc map thủ công ở đây
+                                recipes.Add(new Recipe
                                 {
                                     RecipeId = Convert.ToInt32(reader["recipe_id"]),
                                     Title = reader["title"].ToString(),
-                                    Difficulty = reader["difficulty"]?.ToString(),
-                                    TimeNeeded = reader["time_needed"]?.ToString(),
-                                    ImageUrl = reader["image_url"]?.ToString(),
-                                    AuthorName = reader["AuthorName"]?.ToString(),
-                                    CategoryName = reader["CategoryName"]?.ToString(),
-
-                                    // Chưa tính thống kê thì cho mặc định
-                                    TotalFavorites = 0,
-                                    AverageRating = 0
-                                };
-
-                                recipes.Add(recipe);
+                                    Difficulty = reader["difficulty"].ToString(),
+                                    TimeNeeded = reader["time_needed"].ToString(),
+                                    ImageUrl = reader["image_url"].ToString(),
+                                    AuthorName = reader["AuthorName"].ToString(),
+                                    CategoryName = reader["CategoryName"].ToString(),
+                                    TotalFavorites = Convert.ToInt32(reader["TotalFavorites"]),
+                                    AverageRating = Convert.ToDouble(reader["AverageRating"])
+                                });
                             }
                         }
                     }
@@ -163,19 +160,14 @@ namespace WinCook.Services
             }
             catch (Exception ex)
             {
-                // Tạm thời cho hiện message để dễ debug
-                System.Windows.Forms.MessageBox.Show(
-                    "Lỗi khi lấy danh sách yêu thích: " + ex.Message,
-                    "Lỗi GetFavoriteRecipes");
+                Console.WriteLine("Lỗi khi lấy danh sách yêu thích: " + ex.Message);
             }
-
             return recipes;
         }
 
-
         #endregion
 
-        #region === Ratings (Đánh giá) ===
+        #region === Ratings (Đánh giá & Bình luận) ===
 
         /// <summary>
         /// (Nhóm B) Thêm hoặc Cập nhật đánh giá (score + comment) của người dùng cho 1 công thức.
@@ -241,11 +233,12 @@ namespace WinCook.Services
         }
 
         /// <summary>
-        /// (Nhóm B) Lấy tất cả đánh giá của một công thức để hiển thị (kèm tên người đánh giá).
+        /// (Nhóm B) Lấy danh sách đánh giá của một công thức (Mới nhất lên đầu).
         /// </summary>
         public List<Rating> GetRatingsForRecipe(int recipeId)
         {
             List<Rating> ratings = new List<Rating>();
+            // Lấy hết (bỏ TOP 10) để frmRecipeDetails tự xử lý phân trang (nút "Xem thêm")
             string query = @"
                 SELECT r.rating_id, r.user_id, r.recipe_id, r.score, r.comment, r.created_at, u.username
                 FROM Ratings r
@@ -396,9 +389,6 @@ namespace WinCook.Services
         #endregion
 
         #region === Collections (Bộ sưu tập) ===
-
-        // (Các chức năng này phức tạp hơn, có thể làm sau)
-        // Dưới đây là các hàm cơ bản
 
         /// <summary>
         /// (Nhóm B) Lấy tất cả Bộ sưu tập của một người dùng.

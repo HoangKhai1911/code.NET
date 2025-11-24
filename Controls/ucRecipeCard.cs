@@ -1,89 +1,177 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using WinCook.Models; // Vẫn cần using Models
+using WinCook.Models;
+using WinCook.Services;
 
-namespace WinCook.Controls // <-- ĐÃ CẬP NHẬT NAMESPACE
+namespace WinCook.Controls
 {
     public partial class ucRecipeCard : UserControl
     {
-        // Biến này sẽ lưu trữ toàn bộ thông tin của thẻ
         private readonly Recipe _recipe;
+        private readonly InteractionService _interactionService;
 
-        // Tạo một Event (sự kiện) tên là CardClicked
-        // Form frmRecipes sẽ "lắng nghe" sự kiện này
         public event EventHandler CardClicked;
+        // Sự kiện khi người dùng chấm điểm xong (để form cha reload nếu cần)
+        public event EventHandler RatingSubmitted;
 
-        // === SỬA LỖI DESIGNER ===
-        // 1. Thêm constructor không tham số (parameterless)
-        //    BẮT BUỘC phải có để Designer hoạt động
+        // Menu chọn sao
+        private ContextMenuStrip _ratingMenu;
+
         public ucRecipeCard()
         {
             InitializeComponent();
+            // Khởi tạo menu rỗng để tránh lỗi Designer
+            _ratingMenu = new ContextMenuStrip();
         }
 
-        // 2. Constructor chính (dùng khi chạy): Nhận dữ liệu Recipe
-        public ucRecipeCard(Recipe recipe) : this() // Gọi this() để chạy InitializeComponent() ở trên
+        public ucRecipeCard(Recipe recipe) : this()
         {
             _recipe = recipe;
+            _interactionService = new InteractionService();
 
-            // 3. Gán dữ liệu lên UI
+            // 1. Gán dữ liệu UI
             lblTitle.Text = recipe.Title;
             lblAuthor.Text = "by " + recipe.AuthorName;
 
-            // 4. Tải ảnh (xử lý lỗi)
+            UpdateRatingDisplay();
+
+            // Tải ảnh
             if (!string.IsNullOrEmpty(recipe.ImageUrl))
             {
-                try
-                {
-                    // Dùng LoadAsync để tải ảnh bất đồng bộ,
-                    // giúp UI không bị "đơ" khi tải 30 ảnh
-                    picImage.LoadAsync(recipe.ImageUrl);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Lỗi tải ảnh: " + ex.Message);
-                    // Nếu lỗi, hiển thị ảnh mặc định
-                    picImage.ImageLocation = "https://placehold.co/200x150/E8AA8B/ffffff?text=Image+Error";
-                }
+                try { picImage.LoadAsync(recipe.ImageUrl); }
+                catch { picImage.ImageLocation = "https://placehold.co/200x150/E8AA8B/ffffff?text=Error"; }
             }
 
-            // 5. Gán sự kiện Click cho TOÀN BỘ control
-            // Bất kể bấm vào Ảnh, Chữ hay Nền, đều sẽ kích hoạt
-            this.Click += new EventHandler(OnCardClick);
-            lblTitle.Click += new EventHandler(OnCardClick);
-            lblAuthor.Click += new EventHandler(OnCardClick);
-            picImage.Click += new EventHandler(OnCardClick);
-        }
-
-        /// <summary>
-        /// Hàm này được gọi khi bấm vào bất kỳ đâu trên thẻ
-        /// </summary>
-        private void OnCardClick(object sender, EventArgs e)
-        {
-            // Kích hoạt sự kiện CardClicked
-            // và gửi "chính nó" (this - tức là cái ucRecipeCard) 
-            // về cho frmRecipes biết
-            CardClicked?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// Hàm này cho phép frmRecipes lấy RecipeId của thẻ đã được bấm
-        /// </summary>
-        public int GetRecipeId()
-        {
-            // Thêm kiểm tra null (phòng trường hợp Designer gọi)
-            if (_recipe != null)
+            // Check yêu thích
+            if (AuthManager.IsLoggedIn)
             {
-                return _recipe.RecipeId;
+                bool isFav = _interactionService.IsRecipeFavorited(AuthManager.CurrentUser.UserId, recipe.RecipeId);
+                SetFavoriteIcon(isFav);
             }
-            return 0; // Trả về 0 nếu đang ở chế độ Design
+
+            // 2. Tạo Menu Đánh giá (0.5 -> 5.0 sao)
+            InitializeRatingMenu();
+
+            // 3. Gán sự kiện Click
+            // Click Tim -> Lưu yêu thích
+            btnFavoriteSmall.Click += (s, e) => ToggleFavorite();
+
+            // Click Số sao -> Hiện Menu chấm điểm
+            lblRating.Cursor = Cursors.Hand;
+            lblRating.Click += (s, e) => {
+                // Hiện menu ngay dưới label số sao
+                _ratingMenu.Show(lblRating, new Point(0, lblRating.Height));
+            };
+
+            // Click chỗ khác -> Mở chi tiết
+            this.Click += (s, e) => CardClicked?.Invoke(this, e);
+            picImage.Click += (s, e) => CardClicked?.Invoke(this, e);
+            lblTitle.Click += (s, e) => CardClicked?.Invoke(this, e);
+            lblAuthor.Click += (s, e) => CardClicked?.Invoke(this, e);
+        }
+
+        private void InitializeRatingMenu()
+        {
+            _ratingMenu = new ContextMenuStrip();
+            _ratingMenu.RenderMode = ToolStripRenderMode.System;
+
+            // Thêm các mức điểm từ 5.0 xuống 1.0
+            for (double i = 5.0; i >= 1.0; i -= 1.0)
+            {
+                double score = i; // Biến cục bộ cho lambda
+                ToolStripMenuItem item = new ToolStripMenuItem($"{score} ★");
+                item.Click += (s, e) => SubmitRating((int)score);
+
+                // Tô màu vàng cho đẹp
+                item.ForeColor = Color.Goldenrod;
+                item.Font = new Font("Segoe UI", 9, FontStyle.Bold);
+
+                _ratingMenu.Items.Add(item);
+            }
+        }
+
+        private void SubmitRating(int score)
+        {
+            if (!AuthManager.IsLoggedIn)
+            {
+                MessageBox.Show("Vui lòng đăng nhập để đánh giá.");
+                return;
+            }
+
+            // Lưu đánh giá nhanh (không có comment)
+            Rating newRating = new Rating
+            {
+                UserId = AuthManager.CurrentUser.UserId,
+                RecipeId = _recipe.RecipeId,
+                Score = score,
+                Comment = "" // Đánh giá nhanh ko có comment
+            };
+
+            bool success = _interactionService.AddOrUpdateRating(newRating);
+            if (success)
+            {
+                MessageBox.Show($"Đã chấm {score} sao cho món này!");
+                // Kích hoạt sự kiện để form cha biết (có thể reload lại list để cập nhật điểm TB mới)
+                RatingSubmitted?.Invoke(this, EventArgs.Empty);
+
+                // Tạm thời cập nhật UI (số thực tế cần reload từ DB)
+                lblRating.Text = "Đã chấm " + score + " ★";
+            }
+            else
+            {
+                MessageBox.Show("Lỗi khi chấm điểm.");
+            }
+        }
+
+        private void UpdateRatingDisplay()
+        {
+            if (_recipe.AverageRating > 0)
+            {
+                lblRating.Text = $"{_recipe.AverageRating:F1} ★";
+                lblRating.ForeColor = Color.Goldenrod;
+            }
+            else
+            {
+                lblRating.Text = "☆ Đánh giá"; // Chưa có đánh giá
+                lblRating.ForeColor = Color.Gray;
+            }
+        }
+
+        public int GetRecipeId() => _recipe?.RecipeId ?? 0;
+
+        private void SetFavoriteIcon(bool isFav)
+        {
+            if (isFav)
+            {
+                btnFavoriteSmall.Text = "♥";
+                btnFavoriteSmall.ForeColor = Color.Red;
+            }
+            else
+            {
+                btnFavoriteSmall.Text = "♡";
+                btnFavoriteSmall.ForeColor = Color.LightGray;
+            }
+        }
+
+        private void ToggleFavorite()
+        {
+            if (!AuthManager.IsLoggedIn)
+            {
+                MessageBox.Show("Vui lòng đăng nhập.");
+                return;
+            }
+
+            int userId = AuthManager.CurrentUser.UserId;
+            int recipeId = _recipe.RecipeId;
+            bool isFav = btnFavoriteSmall.Text == "♥";
+
+            if (isFav)
+                _interactionService.RemoveFavorite(userId, recipeId);
+            else
+                _interactionService.AddFavorite(userId, recipeId);
+
+            SetFavoriteIcon(!isFav);
         }
     }
 }
