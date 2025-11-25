@@ -1,23 +1,24 @@
-﻿//frmRecipes.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using WinCook.Models;   // <-- THÊM
-using WinCook.Services; // <-- THÊM
-using WinCook.Controls; // <-- THÊM THƯ MỤC CONTROLS
+using WinCook.Models;
+using WinCook.Services;
+using WinCook.Controls; // Đảm bảo đã có namespace này
 using System.Drawing;
 using Guna.UI2.AnimatorNS;
+
 namespace WinCook
 {
     public partial class frmRecipes : Form
     {
         // === KHAI BÁO SERVICE (NHÓM A & B) ===
         private readonly RecipeService _recipeService;
-        private readonly InteractionService _interactionService; // Dùng cho nút Yêu thích
+        private readonly InteractionService _interactionService;
         private readonly int _currentUserId;
-        private List<Recipe> _allRecipes; // Biến lưu trữ danh sách
+        private List<Recipe> _allRecipes;
         private readonly RecipeController _controller;
+
         public frmRecipes()
         {
             InitializeComponent();
@@ -27,47 +28,30 @@ namespace WinCook
             _interactionService = new InteractionService();
             _allRecipes = new List<Recipe>();
             _controller = new RecipeController();
-            // Lấy ID người dùng (nếu đã đăng nhập)
+
+            // Lấy ID người dùng
             if (AuthManager.IsLoggedIn)
             {
                 _currentUserId = AuthManager.CurrentUser.UserId;
             }
-            else
-            {
-                // (Tùy chọn) Có thể đóng nếu bắt buộc đăng nhập
-                // MessageBox.Show("Vui lòng đăng nhập.");
-                // this.Close();
-                // return;
-            }
 
-            // === Gán sự kiện (khớp với file Designer của bạn) ===
-
-
-
-
-            // === SỬA LỖI ĐIỀU HƯỚNG ===
-            // Gán sự kiện FormClosing (khi bấm nút 'X')
+            // Gán sự kiện FormClosing
             this.FormClosing += FrmRecipes_FormClosing;
         }
 
         private void frmRecipes_Load(object sender, EventArgs e)
         {
-            // Tải danh sách công thức
             LoadAllRecipes();
-            // Tải danh mục cho ComboBox
             LoadCategories();
         }
 
         #region === Logic Chính (Nhóm A) ===
 
-        /// <summary>
-        /// (Nhóm A - Ktuoi) Tải tất cả công thức từ Service
-        /// </summary>
         private void LoadAllRecipes()
         {
             try
             {
-                _allRecipes = _controller.GetAllRecipes();  // ⬅️ gọi controller
+                _allRecipes = _controller.GetAllRecipes();
                 PopulateRecipeList(_allRecipes);
             }
             catch (Exception ex)
@@ -76,22 +60,12 @@ namespace WinCook
             }
         }
 
-        /// <summary>
-        /// (Nhóm A) Load danh sách Category vào combobox Category by
-        /// </summary>
         private void LoadCategories()
         {
             try
             {
-                // Lấy list Category từ Service (đọc DB)
                 var categories = _recipeService.GetCategories() ?? new List<Category>();
-
-                // Thêm dòng "All" ở đầu để xem tất cả
-                categories.Insert(0, new Category
-                {
-                    CategoryId = 0,
-                    Name = "All"
-                });
+                categories.Insert(0, new Category { CategoryId = 0, Name = "All" });
 
                 guna2ComboBox1.DataSource = categories;
                 guna2ComboBox1.DisplayMember = "Name";
@@ -105,13 +79,14 @@ namespace WinCook
 
         /// <summary>
         /// (Nhóm A) Đổ danh sách Recipe vào FlowLayoutPanel
-        /// (Thay thế hoàn toàn hàm 'BuildRecipeCard' cũ)
+        /// ĐÃ CẬP NHẬT: Sử dụng ucRecipeCard
         /// </summary>
         private void PopulateRecipeList(List<Recipe> recipes)
         {
-            // Xóa hết mấy panel mẫu trong Designer
+            // 1. Xóa cũ
             flowLayoutPanel1.Controls.Clear();
 
+            // 2. Kiểm tra rỗng
             if (recipes == null || recipes.Count == 0)
             {
                 var lblEmpty = new Label
@@ -126,169 +101,29 @@ namespace WinCook
                 return;
             }
 
+            // 3. Tạo thẻ ucRecipeCard cho từng công thức
             foreach (var r in recipes)
             {
-                // === CARD CHA ===
-                var card = new Panel
-                {
-                    Width = 225,
-                    Height = 323,
-                    Margin = new Padding(10),
-                    BackColor = Color.Transparent,
-                    Cursor = Cursors.Hand,
-                };
+                // Khởi tạo Card với dữ liệu Recipe
+                ucRecipeCard card = new ucRecipeCard(r);
 
-                // === HÌNH ẢNH ===
-                var pic = new PictureBox
-                {
-                    Width = 275,
-                    Height = 200,
-                    Left = 0,
-                    Top = 0,
-                    SizeMode = PictureBoxSizeMode.StretchImage,
-                    BackColor = Color.White
-                };
+                // Căn chỉnh lề
+                card.Margin = new Padding(10);
 
-                // cố gắng load ảnh từ đường dẫn, nếu lỗi thì để trống
-                try
-                {
-                    if (!string.IsNullOrWhiteSpace(r.ImageUrl) && System.IO.File.Exists(r.ImageUrl))
-                    {
-                        pic.Image = Image.FromFile(r.ImageUrl);
-                    }
-                }
-                catch
-                {
-                    // nếu lỗi thì cho qua, giữ ảnh trắng
-                }
+                // Gán sự kiện Click: Khi bấm vào card thì mở chi tiết
+                // (Sử dụng event CardClicked mà bạn đã định nghĩa trong ucRecipeCard)
+                card.CardClicked += (s, e) => OnRecipeCardClicked(card, e);
 
-                card.Controls.Add(pic);
+                // Gán sự kiện Chấm điểm xong: Load lại list để cập nhật điểm TB
+                card.RatingSubmitted += (s, e) => LoadAllRecipes();
 
-                // === PANEL THÔNG TIN ===
-                var info = new Panel
-                {
-                    Width = 275,
-                    Height = 120,
-                    Left = 0,
-                    Top = 200,
-                    BackColor = Color.White
-                };
-
-                // Tiêu đề
-                var lblTitle = new Label
-                {
-                    Text = r.Title ?? "(Không có tiêu đề)",
-                    Font = new Font("Segoe UI", 11, FontStyle.Bold),
-                    AutoSize = false,
-                    Left = 18,
-                    Top = 0,
-                    Width = 240,
-                };
-
-                // Author
-                var lblAuthorCaption = new Label
-                {
-                    Text = "Author :",
-                    Font = new Font("Segoe UI Semibold", 10),
-                    AutoSize = true,
-                    Left = 18,
-                    Top = 25
-                };
-
-                var lblAuthor = new Label
-                {
-                    Text = r.AuthorName ?? "",
-                    Font = new Font("Segoe UI Semibold", 10),
-                    AutoSize = true,
-                    Left = 84,
-                    Top = 25
-                };
-
-                // Time
-                var lblTimeCaption = new Label
-                {
-                    Text = "Time :",
-                    Font = new Font("Segoe UI Semibold", 10),
-                    AutoSize = true,
-                    Left = 18,
-                    Top = 47
-                };
-
-                var lblTime = new Label
-                {
-                    Text = string.IsNullOrWhiteSpace(r.TimeNeeded) ? "N/A" : r.TimeNeeded,
-                    Font = new Font("Segoe UI Semibold", 10),
-                    AutoSize = true,
-                    Left = 84,
-                    Top = 47
-                };
-
-                // Category
-                var lblCateCaption = new Label
-                {
-                    Text = "Cate :",
-                    Font = new Font("Segoe UI Semibold", 10),
-                    AutoSize = true,
-                    Left = 18,
-                    Top = 69
-                };
-
-                var lblCate = new Label
-                {
-                    Text = r.CategoryName ?? "N/A",
-                    Font = new Font("Segoe UI Semibold", 10),
-                    AutoSize = true,
-                    Left = 84,
-                    Top = 69
-                };
-
-                info.Controls.Add(lblTitle);
-                info.Controls.Add(lblAuthorCaption);
-                info.Controls.Add(lblAuthor);
-                info.Controls.Add(lblTimeCaption);
-                info.Controls.Add(lblTime);
-                info.Controls.Add(lblCateCaption);
-                info.Controls.Add(lblCate);
-
-                card.Controls.Add(info);
-
-                // === CLICK MỞ CHI TIẾT ===
-                int recipeId = r.RecipeId;    // capture local
-                void openDetail(object? s, EventArgs e)
-                {
-                    // Lấy full Recipe từ controller
-                    var recipe = _controller.GetRecipeDetails(recipeId);
-                    if (recipe == null)
-                    {
-                        MessageBox.Show("Không tìm thấy chi tiết món ăn.");
-                        return;
-                    }
-
-                    using (var f = new frmRecipeDetails(recipeId))  // ⬅️ truyền RecipeId (int)
-                    {
-                        f.ShowDialog();
-                    }
-
-                    LoadAllRecipes();
-                }
-
-
-                card.Click += openDetail;
-                pic.Click += openDetail;
-                info.Click += openDetail;
-                lblTitle.Click += openDetail;
-                lblAuthor.Click += openDetail;
-                lblTime.Click += openDetail;
-                lblCate.Click += openDetail;
-
-                // === THÊM VÀO FLOWLAYOUT ===
+                // Thêm vào danh sách hiển thị
                 flowLayoutPanel1.Controls.Add(card);
             }
         }
 
-
         /// <summary>
-        /// (Nhóm A) Được gọi khi bấm vào bất kỳ thẻ 'ucRecipeCard' nào
+        /// Xử lý khi bấm vào Card -> Mở chi tiết
         /// </summary>
         private void OnRecipeCardClicked(object sender, EventArgs e)
         {
@@ -296,16 +131,22 @@ namespace WinCook
             {
                 int recipeId = card.GetRecipeId();
 
-                // Mở form Chi tiết (Nhóm B)
-                frmRecipeDetails frmDetail = new frmRecipeDetails(recipeId);
+                // Kiểm tra tồn tại
+                var recipe = _controller.GetRecipeDetails(recipeId);
+                if (recipe == null)
+                {
+                    MessageBox.Show("Không tìm thấy chi tiết món ăn.");
+                    return;
+                }
 
-                // Dùng ShowDialog() để nó chặn form này
-                // Khi form Chi tiết đóng, nó sẽ quay lại đây...
-                frmDetail.ShowDialog();
+                // Mở Form Chi tiết
+                using (var f = new frmRecipeDetails(recipeId))
+                {
+                    f.ShowDialog();
+                }
 
-                // ...và chúng ta tải lại danh sách NGAY LẬP TỨC
-                // (Để cập nhật nếu người dùng vừa bấm Yêu thích/Bỏ yêu thích)
-                LoadAllRecipes(); // <--- DÒNG NÀY GIẢI QUYẾT VẤN ĐỀ ĐỒNG BỘ
+                // Load lại danh sách sau khi đóng chi tiết (để cập nhật view, like...)
+                LoadAllRecipes();
             }
         }
 
@@ -313,20 +154,20 @@ namespace WinCook
 
         #region === Sự kiện Nút bấm Chức năng (Nhóm A) ===
 
-        // Search (Nút 'guna2Button6')
+        // Search
         private void guna2Button6_Click(object sender, EventArgs e)
         {
-            // Lấy keyword từ ô search (Giả định tên là 'guna2TextBox1' - theo code cũ)
+            // Lưu ý: Kiểm tra tên control nhập liệu trong Designer (ví dụ: guna2TextBox1)
+            if (guna2TextBox1 == null) return;
+
             string keyword = guna2TextBox1.Text.Trim().ToLower();
 
             if (string.IsNullOrWhiteSpace(keyword))
             {
-                // Không nhập gì -> load toàn bộ
                 PopulateRecipeList(_allRecipes);
             }
             else
             {
-                // Có từ khoá -> Lọc danh sách đã tải (rất nhanh)
                 var filteredList = _allRecipes
                     .Where(r => r.Title.ToLower().Contains(keyword) ||
                                 r.AuthorName.ToLower().Contains(keyword))
@@ -336,44 +177,27 @@ namespace WinCook
             }
         }
 
-        // Add (Nút '+' - 'guna2Button7')
+        // Add Recipe
         private void guna2Button7_Click(object sender, EventArgs e)
         {
-            // Mở form thêm / sửa công thức
-
-            // === SỬA LỖI CS0246 ===
-            // Đổi tên form từ 'frmAdd_EditRecipie' thành 'frmAddRecipie'
-            // (Khớp với tên form bạn dùng trong frmRecipeDetails.cs)
-            using (var f = new frmAddRecipie())
+            // Mở form thêm mới
+            using (var f = new frmAddRecipie()) // Đảm bảo tên class form đúng
             {
-                f.ShowDialog(); // mở modal, nhập xong bấm Add sẽ đóng form
+                f.ShowDialog();
             }
-
-            // Sau khi form đóng, load lại danh sách để thấy recipe mới
             LoadAllRecipes();
         }
 
         #endregion
 
-        #region === SỬA LỖI ĐIỀU HƯỚNG ===
+        #region === Điều hướng & Logic Form (Giữ nguyên) ===
 
-        // Helper dùng chung: Đóng form hiện tại
         private void OpenForm(Form f)
         {
             f.Show();
-
-            // === SỬA LỖI CS1061 ===
-            // XÓA DÒNG NÀY:
-            // this.CloseReason = CloseReason.None; 
-
-            // Chỉ cần gọi Close(). Logic trong FrmRecipes_FormClosing
-            // sẽ tự động kiểm tra và không logout 2 lần.
             this.Hide();
         }
 
-        // ===== Thanh menu trên cùng của frmRecipes =====
-
-        // Home
         private void guna2Button1_Click(object sender, EventArgs e)
         {
             var f = Application.OpenForms.OfType<frmHomePage>().FirstOrDefault();
@@ -381,23 +205,14 @@ namespace WinCook
             OpenForm(f);
         }
 
-        // Recipes (đang ở Recipes rồi -> không làm gì)
-        private void guna2Button2_Click(object sender, EventArgs e)
-        {
-            // Đang ở Recipes, không cần chuyển
-        }
+        private void guna2Button2_Click(object sender, EventArgs e) { } // Đang ở Recipes
 
-        // Favorites
-        // Favorites
         private void guna2Button5_Click(object sender, EventArgs e)
         {
-            // LUÔN tạo form Favorites mới để nó load lại danh sách từ Service
             var f = new frmMyFavRecipes();
             OpenForm(f);
         }
 
-
-        // Collections
         private void guna2Button3_Click(object sender, EventArgs e)
         {
             var f = Application.OpenForms.OfType<frmCollection>().FirstOrDefault();
@@ -405,7 +220,6 @@ namespace WinCook
             OpenForm(f);
         }
 
-        // Profiles
         private void guna2Button4_Click(object sender, EventArgs e)
         {
             var f = Application.OpenForms.OfType<frmProfile>().FirstOrDefault();
@@ -413,38 +227,46 @@ namespace WinCook
             OpenForm(f);
         }
 
-        // === HÀM MỚI: XỬ LÝ KHI BẤM NÚT 'X' ===
         private void FrmRecipes_FormClosing(object? sender, FormClosingEventArgs e)
         {
             if (e.CloseReason == CloseReason.UserClosing)
             {
-                // Tìm frmHomePage CŨ (đang bị ẩn) và hiển thị lại
                 var homePage = Application.OpenForms.OfType<frmHomePage>().FirstOrDefault();
-                if (homePage != null)
+                if (homePage != null) homePage.Show();
+                else
                 {
-                    homePage.Show();
+                    var loginForm = Application.OpenForms.OfType<frmLogin>().FirstOrDefault();
+                    if (loginForm != null) loginForm.Show();
+                    else new frmLogin().Show();
+                }
+            }
+        }
+
+        private void guna2ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_allRecipes == null || _allRecipes.Count == 0) return;
+
+            if (guna2ComboBox1.SelectedValue is int selectedCategoryId)
+            {
+                if (selectedCategoryId == 0)
+                {
+                    PopulateRecipeList(_allRecipes);
                 }
                 else
                 {
-                    // Fallback: Nếu không tìm thấy (ví dụ: đang test)
-                    var loginForm = Application.OpenForms.OfType<frmLogin>().FirstOrDefault();
-                    if (loginForm != null)
-                    {
-                        loginForm.Show();
-                    }
-                    else
-                    {
-                        new frmLogin().Show();
-                    }
+                    // Lọc danh sách hiện có (Nhanh hơn gọi DB)
+                    var filtered = _allRecipes.Where(r => r.CategoryName == guna2ComboBox1.Text).ToList();
+                    // Hoặc gọi Service nếu muốn chính xác theo ID:
+                    // var filtered = _recipeService.FilterRecipesByCategory(selectedCategoryId);
+
+                    PopulateRecipeList(filtered);
                 }
             }
         }
 
         #endregion
 
-        #region === Các hàm Designer trống (để tránh lỗi Build) ===
-        // (Đây là các hàm rỗng mà code cũ của bạn có,
-        // chúng ta giữ lại để làm hài lòng file Designer)
+        // Các event giữ lại để Designer không lỗi
         private void panel2_Paint(object sender, PaintEventArgs e) { }
         private void panel1_Paint(object sender, PaintEventArgs e) { }
         private void label2_Click(object sender, EventArgs e) { }
@@ -453,37 +275,6 @@ namespace WinCook
         private void label45_Click(object sender, EventArgs e) { }
         private void pictureBox6_Click(object sender, EventArgs e) { }
         private void panel12_Paint(object sender, PaintEventArgs e) { }
-        #endregion
-
-        private void guna2ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            // Nếu chưa có dữ liệu recipe thì thôi
-            if (_allRecipes == null || _allRecipes.Count == 0)
-                return;
-
-            // Lấy category_id đang chọn
-            if (guna2ComboBox1.SelectedValue is int selectedCategoryId)
-            {
-                // 0 = All -> hiện tất cả
-                if (selectedCategoryId == 0)
-                {
-                    PopulateRecipeList(_allRecipes);
-                }
-                else
-                {
-                    // Gọi Service lọc theo CategoryID (logic DB ở Services)
-                    var filtered = _recipeService.FilterRecipesByCategory(selectedCategoryId);
-
-                    // Nếu muốn tiết kiệm query, có thể thay bằng lọc _allRecipes theo CategoryName
-                    // nhưng mình dùng đúng Service cho clear
-                    PopulateRecipeList(filtered);
-                }
-            }
-        }
-
-        private void pictureBox2_Click(object sender, EventArgs e)
-        {
-
-        }
+        private void pictureBox2_Click(object sender, EventArgs e) { }
     }
 }

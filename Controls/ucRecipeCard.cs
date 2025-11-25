@@ -59,7 +59,8 @@ namespace WinCook.Controls
 
             // Click Số sao -> Hiện Menu chấm điểm
             lblRating.Cursor = Cursors.Hand;
-            lblRating.Click += (s, e) => {
+            lblRating.Click += (s, e) =>
+            {
                 // Hiện menu ngay dưới label số sao
                 _ratingMenu.Show(lblRating, new Point(0, lblRating.Height));
             };
@@ -172,6 +173,11 @@ namespace WinCook.Controls
                 _interactionService.AddFavorite(userId, recipeId);
 
             SetFavoriteIcon(!isFav);
+        }
+
+        private void picImage_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
