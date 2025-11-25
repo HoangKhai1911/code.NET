@@ -480,12 +480,11 @@ namespace WinCook
             guna2Button2.ForeColor = Color.White;
             guna2Button2.Image = (Image)resources.GetObject("guna2Button2.Image");
             guna2Button2.ImageSize = new Size(42, 42);
-            guna2Button2.Location = new Point(782, 154);
+            guna2Button2.Location = new Point(782, 115);
             guna2Button2.Name = "guna2Button2";
             guna2Button2.ShadowDecoration.CustomizableEdges = customizableEdges32;
             guna2Button2.Size = new Size(61, 54);
             guna2Button2.TabIndex = 24;
-            guna2Button2.Click += guna2Button2_Click;
             // 
             // guna2Button1
             // 
@@ -500,16 +499,15 @@ namespace WinCook
             guna2Button1.ForeColor = Color.White;
             guna2Button1.Image = (Image)resources.GetObject("guna2Button1.Image");
             guna2Button1.ImageSize = new Size(31, 31);
-            guna2Button1.Location = new Point(782, 88);
+            guna2Button1.Location = new Point(782, 40);
             guna2Button1.Name = "guna2Button1";
             guna2Button1.ShadowDecoration.CustomizableEdges = customizableEdges34;
             guna2Button1.Size = new Size(61, 54);
             guna2Button1.TabIndex = 23;
-            guna2Button1.Click += guna2Button1_Click;
             // 
             // rsMyRating
             // 
-            rsMyRating.Location = new Point(777, 33);
+            rsMyRating.Location = new Point(228, 583);
             rsMyRating.Name = "rsMyRating";
             rsMyRating.Size = new Size(150, 35);
             rsMyRating.TabIndex = 25;

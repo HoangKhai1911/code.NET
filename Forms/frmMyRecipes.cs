@@ -38,7 +38,7 @@ namespace WinCook
 
             // === Gán sự kiện (Giả định tên control giống frmMyFavRecipes) ===
             this.Load += frmMyRecipes_Load;
-            
+
             // Menu
             guna2Button1.Click += guna2Button1_Click; // Home
             guna2Button2.Click += guna2Button2_Click; // Recipes
@@ -85,7 +85,7 @@ namespace WinCook
                         .Where(r => r.Title.ToLower().Contains(searchTerm))
                         .ToList();
                 }
-                
+
                 // 3. Hiển thị lên
                 PopulateRecipeList(recipesToShow);
             }
@@ -139,7 +139,7 @@ namespace WinCook
 
                 // Khi form Chi tiết đóng, tải lại danh sách
                 // (Phòng trường hợp người dùng Sửa/Xóa công thức của họ)
-                _myRecipes.Clear(); 
+                _myRecipes.Clear();
                 LoadMyRecipes(guna2TextBox1.Text.Trim()); // Tải lại
             }
         }
@@ -153,11 +153,11 @@ namespace WinCook
         {
             // Lấy keyword từ ô search (Giả định tên là 'guna2TextBox1')
             string keyword = guna2TextBox1.Text.Trim();
-            
+
             // Chỉ cần gọi lại LoadMyRecipes với keyword
             LoadMyRecipes(keyword);
         }
-        
+
         #endregion
 
         #region === SỬA LỖI ĐIỀU HƯỚNG ===
@@ -237,9 +237,9 @@ namespace WinCook
                 }
             }
         }
-        
+
         #endregion
-        
+
         // (Đây là các hàm rỗng từ file v1 của bạn, giữ lại để tránh lỗi Designer)
         private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e) { }
         private void panel2_Paint(object sender, PaintEventArgs e) { }
@@ -264,5 +264,10 @@ namespace WinCook
         private void guna2Button13_Click(object sender, EventArgs e) { }
         private void guna2Button1_Click_1(object sender, EventArgs e) { }
         private void guna2Button7_Click(object sender, EventArgs e) { }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
     }
 }

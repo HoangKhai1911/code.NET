@@ -1,10 +1,12 @@
-﻿//Forms/frmProfile.cs
-using System;
+﻿using System;
+using System.Drawing;
+using System.IO;
+using System.Linq;
 using System.Windows.Forms;
-using WinCook.Services; // <-- Thêm Service
-using WinCook.Models;   // <-- Thêm Model
-using System.Windows.Forms.DataVisualization.Charting; // <-- Thêm thư viện Chart
-using System.Linq; // <-- THÊM THƯ VIỆN NÀY
+using System.Windows.Forms.DataVisualization.Charting;
+using WinCook.Models;
+using WinCook.Services;
+using WinCook.Forms; // Namespace chứa frmEditProfile
 
 namespace WinCook
 {
@@ -12,223 +14,271 @@ namespace WinCook
     {
         // Khai báo Service
         private readonly UtilityService _utilityService;
+        private readonly UserService _userService;
         private int _currentUserId;
 
         public frmProfile()
         {
             InitializeComponent();
 
+            // Khởi tạo Service
             _utilityService = new UtilityService();
+            _userService = new UserService();
 
-            // Lấy ID người dùng (nếu đã đăng nhập)
-            if (AuthManager.IsLoggedIn)
+            // 1. Kiểm tra đăng nhập
+            if (AuthManager.IsLoggedIn && AuthManager.CurrentUser != null)
             {
                 _currentUserId = AuthManager.CurrentUser.UserId;
             }
             else
             {
-                // Nếu chưa đăng nhập (ví dụ: đang test), đóng form
-                MessageBox.Show("Vui lòng đăng nhập để xem Trang cá nhân.");
+                // Nếu chưa đăng nhập thì đóng hoặc hiện thông báo
+                // _currentUserId = 1; // Bật dòng này nếu muốn test giao diện mà không cần login
+                MessageBox.Show("Vui lòng đăng nhập để xem trang cá nhân.");
                 this.Close();
                 return;
             }
 
-            // Gán sự kiện Load
-            this.Load += FrmProfile_Load;
+            // 2. Gán sự kiện thủ công cho các Label (Vì trong Designer chưa gán)
+            // Link "My Recipes"
+            guna2HtmlLabel4.Cursor = Cursors.Hand;
+            guna2HtmlLabel4.Click += (s, e) => OpenForm(new frmMyRecipes());
 
-            // Gán sự kiện cho các nút/link còn thiếu (theo file Designer)
-            guna2Button1.Click += Guna2Button1_Click; // Nút "Edit"
-            guna2HtmlLabel4.Click += Guna2HtmlLabel4_Click; // Link "My Recipes"
-            guna2HtmlLabel5.Click += Guna2HtmlLabel5_Click; // Link "My Favorite Recipes"
+            // Link "My Favorite Recipes"
+            guna2HtmlLabel5.Cursor = Cursors.Hand;
+            guna2HtmlLabel5.Click += (s, e) => OpenForm(new frmMyFavRecipes());
 
-            // === THÊM SỰ KIỆN LOGOUT KHI ĐÓNG FORM ===
-            // Gán sự kiện FormClosing (khi bấm nút 'X')
+            // Button "Browse" (button1) - Gán chung logic với click ảnh
+            button1.Click += pictureBox1_Click;
+
+            // Xử lý Logout khi đóng form bằng nút X
             this.FormClosing += FrmProfile_FormClosing;
         }
 
-        /// <summary>
-        /// Hàm chạy khi Form được tải
-        /// </summary>
-        private void FrmProfile_Load(object sender, EventArgs e)
+        // ============================================================
+        // PHẦN 1: CÁC SỰ KIỆN ĐƯỢC ĐỊNH NGHĨA TRONG DESIGNER
+        // (Tên hàm phải KHỚP CHÍNH XÁC với Designer.cs)
+        // ============================================================
+
+        // Sự kiện Load Form (Designer đặt tên là frmProfile_Load_1)
+        private void frmProfile_Load_1(object sender, EventArgs e)
         {
-            LoadUserProfile();
+            RefreshProfileUI();
             LoadStatistics();
         }
 
-        /// <summary>
-        /// (Nhóm B) Tải thông tin người dùng lên các Label
-        /// </summary>
-        private void LoadUserProfile()
+        // Nút EDIT (Designer đặt tên là guna2Button1_Click_1)
+        private void guna2Button1_Click_1(object sender, EventArgs e)
         {
-            if (AuthManager.IsLoggedIn)
+            var currentUser = AuthManager.CurrentUser;
+            if (currentUser == null) return;
+
+            // Truyền FullName vào tham số thứ 2
+            using (var frmEdit = new frmEditProfile(_currentUserId, currentUser.FullName, currentUser.Email))
             {
-                guna2HtmlLabel2.Text = AuthManager.CurrentUser.Username; // Tên người dùng
-                guna2HtmlLabel1.Text = AuthManager.CurrentUser.Email;    // Email
-                // guna2HtmlLabel3.Text = "0814501476"; // (Bạn có thể thêm SĐT vào CSDL nếu muốn)
-            }
-        }
-
-        /// <summary>
-        /// (Nhóm D - Tổng tài audio) Tải thống kê và vẽ biểu đồ
-        /// </summary>
-        private void LoadStatistics()
-        {
-            BasicStatistics stats = _utilityService.GetBasicStatistics();
-
-            // 1. Biểu đồ 1 (chart1 - Bar Chart: Top 5 Yêu thích)
-            chart1.Series.Clear();
-            chart1.Titles.Clear();
-            chart1.Titles.Add("Top 5 Món ăn được Yêu thích nhất");
-
-            Series series1 = chart1.Series.Add("Lượt yêu thích");
-            series1.ChartType = SeriesChartType.Bar;
-
-            if (stats.Top5Favorites != null && stats.Top5Favorites.Count > 0)
-            {
-                foreach (var item in stats.Top5Favorites)
+                if (frmEdit.ShowDialog() == DialogResult.OK)
                 {
-                    series1.Points.AddXY(item.Title, item.TotalFavorites);
+                    RefreshProfileUI();
                 }
             }
-            else
-            {
-                series1.Points.AddXY("Không có dữ liệu", 0);
-            }
-
-            // 2. Biểu đồ 2 (chart2 - Pie Chart: Tổng quan)
-            chart2.Series.Clear();
-            chart2.Titles.Clear();
-            chart2.Titles.Add("Tổng quan Hệ thống");
-
-            Series series2 = chart2.Series.Add("Tổng quan");
-            series2.ChartType = SeriesChartType.Pie;
-            series2.IsValueShownAsLabel = true; // Hiển thị số liệu trên miếng bánh
-
-            series2.Points.AddXY($"Tổng Công thức ({stats.TotalRecipes})", stats.TotalRecipes);
-            series2.Points.AddXY($"Tổng Người dùng ({stats.TotalUsers})", stats.TotalUsers);
-
-            chart2.Legends[0].Enabled = true; // Bật chú thích cho Pie chart
         }
 
+        // Click vào Ảnh Avatar (Designer đặt tên là pictureBox1_Click)
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Title = "Chọn ảnh đại diện mới";
+                ofd.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp";
 
-        // Helper dùng chung (Bạn đã có)
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        string sourceFile = ofd.FileName;
+
+                        // Tạo thư mục UserImages
+                        string uploadFolder = Path.Combine(Application.StartupPath, "UserImages");
+                        if (!Directory.Exists(uploadFolder)) Directory.CreateDirectory(uploadFolder);
+
+                        // Tạo tên file unique
+                        string newFileName = $"Avatar_{_currentUserId}_{DateTime.Now.Ticks}{Path.GetExtension(sourceFile)}";
+                        string destPath = Path.Combine(uploadFolder, newFileName);
+
+                        // Copy ảnh vào thư mục
+                        File.Copy(sourceFile, destPath, true);
+
+                        // Gọi Service cập nhật Database
+                        if (_userService.UpdateUserAvatar(_currentUserId, destPath))
+                        {
+                            MessageBox.Show("Đổi ảnh đại diện thành công!", "Thông báo");
+                            RefreshProfileUI(); // Load lại ảnh mới
+                        }
+                        else
+                        {
+                            MessageBox.Show("Lỗi khi lưu vào Database.", "Lỗi");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Lỗi upload ảnh: " + ex.Message);
+                    }
+                }
+            }
+        }
+
+        // Nút Logout / Icon góc phải (Designer đặt tên là guna2Button2_Click)
+        private void guna2Button2_Click(object sender, EventArgs e)
+        {
+            AuthManager.Logout();
+            this.Close(); // Đóng form, sự kiện FormClosing sẽ lo việc mở lại Login
+        }
+
+        // --- THANH ĐIỀU HƯỚNG (MENU BAR) ---
+
+        // Home
+        private void guna2Button7_Click(object sender, EventArgs e) => OpenForm(new frmHomePage());
+
+        // Recipes
+        private void guna2Button3_Click(object sender, EventArgs e) => OpenForm(new frmRecipes());
+
+        // Favorites
+        private void guna2Button6_Click(object sender, EventArgs e) => OpenForm(new frmMyFavRecipes());
+
+        // Collections
+        private void guna2Button4_Click(object sender, EventArgs e) => OpenForm(new frmCollection());
+
+        // Profiles (Trang hiện tại - Reload lại cho chắc)
+        private void guna2Button5_Click(object sender, EventArgs e) => RefreshProfileUI();
+
+        // Click vào Chart (Designer có tạo sự kiện này, để trống cũng được)
+        private void chart1_Click(object sender, EventArgs e) { }
+
+
+        // ============================================================
+        // PHẦN 2: CÁC HÀM XỬ LÝ LOGIC (PRIVATE HELPER)
+        // ============================================================
+
+        private void RefreshProfileUI()
+        {
+            if (AuthManager.CurrentUser != null)
+            {
+                // 1. Hiển thị Tên
+                if (guna2HtmlLabel2 != null)
+                    guna2HtmlLabel2.Text = AuthManager.CurrentUser.FullName;
+
+                // 2. Hiển thị Email (Đã che mờ bằng hàm MaskEmail bên dưới)
+                if (guna2HtmlLabel1 != null)
+                    guna2HtmlLabel1.Text = MaskEmail(AuthManager.CurrentUser.Email);
+
+                // 3. Hiển thị Avatar
+                string avatarPath = AuthManager.CurrentUser.AvatarUrl;
+
+                if (pictureBox1 != null)
+                {
+                    // Reset thuộc tính ImageLocation trước để tránh xung đột
+                    pictureBox1.ImageLocation = null;
+
+                    // Kiểm tra: Nếu có đường dẫn trong DB VÀ file đó thực sự tồn tại trên máy
+                    if (!string.IsNullOrEmpty(avatarPath) && File.Exists(avatarPath))
+                    {
+                        pictureBox1.ImageLocation = avatarPath;
+                    }
+                    else
+                    {
+                        // --- Load ảnh mặc định từ Resources ---
+                        // Vì file tên là "avatar-profile.jpg", C# sẽ đổi tên biến thành "avatar_profile"
+                        pictureBox1.Image = Properties.Resources.avatar_profile;
+                    }
+
+                    // Chế độ co giãn ảnh đẹp (Zoom giữ tỉ lệ, Stretch lấp đầy)
+                    pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+                }
+            }
+        }
+
+        private void LoadStatistics()
+        {
+            try
+            {
+                // Gọi Service lấy thống kê cá nhân
+                var stats = _utilityService.GetUserStatistics(_currentUserId);
+
+                // --- BIỂU ĐỒ 1: CỘT (Top Món Ăn) ---
+                chart1.Series.Clear();
+                chart1.Titles.Clear();
+                chart1.Titles.Add("Top món ăn được yêu thích");
+
+                Series s1 = chart1.Series.Add("Lượt thích");
+                s1.ChartType = SeriesChartType.Column;
+                s1.Color = Color.Goldenrod;
+
+                if (stats.TopRecipes != null && stats.TopRecipes.Count > 0)
+                {
+                    foreach (var item in stats.TopRecipes)
+                    {
+                        // Lưu ý: Dùng StatChartData (Label, Value)
+                        s1.Points.AddXY(item.Label, item.Value);
+                    }
+                }
+                else
+                {
+                    s1.Points.AddXY("(Chưa có)", 0);
+                }
+
+                // --- BIỂU ĐỒ 2: TRÒN (Danh mục) ---
+                chart2.Series.Clear();
+                chart2.Titles.Clear();
+                chart2.Titles.Add("Phân bố theo Danh mục");
+
+                Series s2 = chart2.Series.Add("Danh mục");
+                s2.ChartType = SeriesChartType.Pie;
+                s2.IsValueShownAsLabel = true;
+
+                if (stats.RecipesByCategory != null && stats.RecipesByCategory.Count > 0)
+                {
+                    foreach (var item in stats.RecipesByCategory)
+                    {
+                        s2.Points.AddXY(item.Label, item.Value);
+                    }
+                }
+                else
+                {
+                    s2.Points.AddXY("(Trống)", 1);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Chart Error: " + ex.Message);
+            }
+        }
+
+        // Hàm che email: abc@gmail.com -> a*****@gmail.com
+        private string MaskEmail(string email)
+        {
+            if (string.IsNullOrEmpty(email) || !email.Contains("@")) return email;
+            var parts = email.Split('@');
+            if (parts[0].Length <= 1) return email;
+            return $"{parts[0][0]}*****@{parts[1]}";
+        }
+
+        // Hàm mở form mới và ẩn form cũ
         private void OpenForm(Form f)
         {
             f.Show();
             this.Hide();
         }
 
-        // ===== Các sự kiện cho nút/link trên Form =====
-
-        // Nút "Edit"
-        private void Guna2Button1_Click(object sender, EventArgs e)
-        {
-            // TODO: (Nhóm B) Mở form "Edit Profile" (nếu có)
-            MessageBox.Show("Chức năng Edit Profile đang được phát triển!");
-        }
-
-        // Link "My Recipes"
-        private void Guna2HtmlLabel4_Click(object sender, EventArgs e)
-        {
-            OpenForm(new frmMyRecipes()); // Mở form "Công thức của tôi"
-        }
-
-        // Link "My Favorite Recipes"
-        private void Guna2HtmlLabel5_Click(object sender, EventArgs e)
-        {
-            OpenForm(new frmMyFavRecipes()); // Mở form "Yêu thích"
-        }
-
-        // Nút icon nhỏ góc phải (guna2Button2) – (Bạn đã có)
-        // (NÚT NÀY BÂY GIỜ LÀ NÚT LOGOUT)
-        private void guna2Button2_Click(object sender, EventArgs e)
-        {
-            // Bằng cách gọi Close(), chúng ta sẽ kích hoạt
-            // sự kiện 'FrmProfile_FormClosing' đã được thêm ở trên.
-            this.Close();
-        }
-
-        // ===== Các nút trên thanh menu top (Code của bạn đã có - Giữ nguyên) =====
-
-        // Home
-        private void guna2Button7_Click(object sender, EventArgs e)
-        {
-            var f = new frmHomePage();
-            OpenForm(f);
-        }
-
-        // Recipes
-        private void guna2Button3_Click(object sender, EventArgs e)
-        {
-            var f = new frmRecipes();
-            OpenForm(f);
-        }
-
-        // Favorites
-        private void guna2Button6_Click(object sender, EventArgs e)
-        {
-            var f = new frmMyFavRecipes();
-            OpenForm(f);
-        }
-
-        // Collections
-        private void guna2Button4_Click(object sender, EventArgs e)
-        {
-            var f = new frmCollection();
-            OpenForm(f);
-        }
-
-        // Profiles (đang ở Profile rồi -> không cần chuyển, nhưng vẫn có handler cho đủ)
-        private void guna2Button5_Click(object sender, EventArgs e)
-        {
-            // Đã ở Profiles, không làm gì
-        }
-
-        // === HÀM MỚI: XỬ LÝ LOGOUT KHI BẤM NÚT 'X' ===
-        /// <summary>
-        /// (Nhóm 0 - Khải) Xử lý Đăng xuất khi đóng Form.
-        /// </summary>
+        // Xử lý đóng form -> về Login
         private void FrmProfile_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // Kiểm tra xem người dùng có đang chủ động điều hướng (Hide)
-            // hay đang thực sự đóng (Close)
-            // Nếu chúng ta chỉ Hide() (như trong OpenForm), e.CloseReason sẽ là None.
-            // Chúng ta chỉ Logout khi người dùng bấm nút 'X' (UserClosing) hoặc gọi this.Close().
-
             if (e.CloseReason == CloseReason.UserClosing)
             {
-                // 1. Đăng xuất người dùng
                 AuthManager.Logout();
-
-                // 2. Tìm và hiển thị lại form Login đã bị ẩn
-                // (Dùng Linq, cần 'using System.Linq;')
-                frmLogin loginForm = Application.OpenForms.OfType<frmLogin>().FirstOrDefault();
-
-                if (loginForm != null)
-                {
-                    // Chế độ Production: Mở lại form Login đã ẩn
-                    loginForm.Show();
-                }
-                else
-                {
-                    new frmLogin().Show();
-                }
+                var loginForm = Application.OpenForms.OfType<frmLogin>().FirstOrDefault();
+                if (loginForm != null) loginForm.Show();
+                else new frmLogin().Show();
             }
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void chart1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void frmProfile_Load_1(object sender, EventArgs e)
-        {
-
         }
     }
 }

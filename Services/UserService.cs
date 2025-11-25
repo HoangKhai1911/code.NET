@@ -96,7 +96,9 @@ namespace WinCook.Services
                 {
                     connection.Open();
                     // Lấy user_id và mật khẩu đã mã hóa từ DB
-                    string query = "SELECT user_id, password_hash, email FROM Users WHERE username = @username";
+                    // Tìm dòng này trong hàm Login:
+                    string query = "SELECT user_id, password_hash, email, AvatarUrl, FullName FROM Users WHERE username = @username";
+                    // Đảm bảo có đủ 5 cột trên.
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
@@ -153,6 +155,77 @@ namespace WinCook.Services
                 }
                 return builder.ToString();
             }
+        }
+
+        public bool UpdateUserAvatar(int userId, string avatarPath)
+        {
+            try
+            {
+                using (var conn = new System.Data.SqlClient.SqlConnection(DBHelper.ConnectionString))
+                {
+                    conn.Open();
+                    // Cập nhật đường dẫn ảnh vào bảng Users
+                    string query = "UPDATE Users SET AvatarUrl = @Path WHERE UserId = @Id";
+
+                    using (var cmd = new System.Data.SqlClient.SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Path", avatarPath);
+                        cmd.Parameters.AddWithValue("@Id", userId);
+
+                        int rows = cmd.ExecuteNonQuery();
+                        if (rows > 0)
+                        {
+                            // Cập nhật luôn vào Session hiện tại để hiển thị ngay
+                            if (AuthManager.CurrentUser != null)
+                                AuthManager.CurrentUser.AvatarUrl = avatarPath;
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi nếu cần
+                Console.WriteLine("Lỗi Update Avatar: " + ex.Message);
+            }
+            return false;
+        }
+
+        // Bạn cũng cần thêm hàm UpdateUserProfile nếu chưa có (để sửa tên/email)
+        public bool UpdateUserProfile(int userId, string newFullName, string newEmail)
+        {
+            try
+            {
+                using (var conn = new SqlConnection(connectionString))
+                {
+                    conn.Open();
+                    // CHỈ UPDATE FullName VÀ Email. KHÔNG ĐỤNG ĐẾN Username.
+                    string query = "UPDATE Users SET FullName = @Name, Email = @Email WHERE UserId = @Id";
+
+                    using (var cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Name", newFullName); // Lưu tên hiển thị mới
+                        cmd.Parameters.AddWithValue("@Email", newEmail);
+                        cmd.Parameters.AddWithValue("@Id", userId);
+
+                        if (cmd.ExecuteNonQuery() > 0)
+                        {
+                            // Cập nhật Session
+                            if (AuthManager.CurrentUser != null)
+                            {
+                                AuthManager.CurrentUser.FullName = newFullName;
+                                AuthManager.CurrentUser.Email = newEmail;
+                            }
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi Update Profile: " + ex.Message);
+            }
+            return false;
         }
     }
 }

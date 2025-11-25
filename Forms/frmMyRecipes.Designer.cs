@@ -69,6 +69,8 @@ namespace WinCook
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges38 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges39 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges40 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges41 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges42 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges43 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges44 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMyRecipes));
@@ -88,8 +90,6 @@ namespace WinCook
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges58 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges59 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges60 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges41 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges42 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             guna2GradientPanel1 = new Guna.UI2.WinForms.Guna2GradientPanel();
             guna2ControlBox14 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2ControlBox12 = new Guna.UI2.WinForms.Guna2ControlBox();
@@ -115,6 +115,7 @@ namespace WinCook
             flowLayoutPanel1 = new FlowLayoutPanel();
             panel1 = new Panel();
             panel2 = new Panel();
+            guna2Button1 = new Guna.UI2.WinForms.Guna2Button();
             guna2Button2 = new Guna.UI2.WinForms.Guna2Button();
             label45 = new Label();
             label44 = new Label();
@@ -182,7 +183,7 @@ namespace WinCook
             label43 = new Label();
             label46 = new Label();
             pictureBox5 = new PictureBox();
-            guna2Button1 = new Guna.UI2.WinForms.Guna2Button();
+            button1 = new Button();
             guna2GradientPanel1.SuspendLayout();
             flowLayoutPanel1.SuspendLayout();
             panel1.SuspendLayout();
@@ -563,6 +564,25 @@ namespace WinCook
             panel2.Name = "panel2";
             panel2.Size = new Size(278, 164);
             panel2.TabIndex = 1;
+            // 
+            // guna2Button1
+            // 
+            guna2Button1.BorderRadius = 20;
+            guna2Button1.CustomizableEdges = customizableEdges41;
+            guna2Button1.DisabledState.BorderColor = Color.DarkGray;
+            guna2Button1.DisabledState.CustomBorderColor = Color.DarkGray;
+            guna2Button1.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
+            guna2Button1.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
+            guna2Button1.FillColor = Color.Orange;
+            guna2Button1.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            guna2Button1.ForeColor = Color.White;
+            guna2Button1.Location = new Point(89, 127);
+            guna2Button1.Name = "guna2Button1";
+            guna2Button1.ShadowDecoration.CustomizableEdges = customizableEdges42;
+            guna2Button1.Size = new Size(77, 32);
+            guna2Button1.TabIndex = 61;
+            guna2Button1.Text = "Edit";
+            guna2Button1.Click += guna2Button1_Click_1;
             // 
             // guna2Button2
             // 
@@ -1358,24 +1378,15 @@ namespace WinCook
             pictureBox5.TabIndex = 1;
             pictureBox5.TabStop = false;
             // 
-            // guna2Button1
+            // button1
             // 
-            guna2Button1.BorderRadius = 20;
-            guna2Button1.CustomizableEdges = customizableEdges41;
-            guna2Button1.DisabledState.BorderColor = Color.DarkGray;
-            guna2Button1.DisabledState.CustomBorderColor = Color.DarkGray;
-            guna2Button1.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
-            guna2Button1.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
-            guna2Button1.FillColor = Color.Orange;
-            guna2Button1.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            guna2Button1.ForeColor = Color.White;
-            guna2Button1.Location = new Point(89, 127);
-            guna2Button1.Name = "guna2Button1";
-            guna2Button1.ShadowDecoration.CustomizableEdges = customizableEdges42;
-            guna2Button1.Size = new Size(77, 32);
-            guna2Button1.TabIndex = 61;
-            guna2Button1.Text = "Edit";
-            guna2Button1.Click += guna2Button1_Click_1;
+            button1.Location = new Point(18, 53);
+            button1.Name = "button1";
+            button1.Size = new Size(94, 29);
+            button1.TabIndex = 61;
+            button1.Text = "GoBack";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
             // 
             // frmMyRecipes
             // 
@@ -1383,6 +1394,7 @@ namespace WinCook
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.SeaShell;
             ClientSize = new Size(943, 575);
+            Controls.Add(button1);
             Controls.Add(flowLayoutPanel1);
             Controls.Add(panel13);
             Controls.Add(guna2Button8);
@@ -1516,5 +1528,6 @@ namespace WinCook
         private Label label46;
         private PictureBox pictureBox5;
         private Guna.UI2.WinForms.Guna2Button guna2Button1;
+        private Button button1;
     }
 }

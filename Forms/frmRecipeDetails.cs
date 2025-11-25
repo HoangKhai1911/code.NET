@@ -332,7 +332,26 @@ namespace WinCook
 
         private void btnAddToCollection_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Tính năng đang phát triển.");
+            if (_currentUserId == 0) { MessageBox.Show("Cần đăng nhập!"); return; }
+
+            // Mở form chọn Collection
+            using (var frmSelect = new WinCook.Forms.frmSelectCollection(_currentUserId))
+            {
+                if (frmSelect.ShowDialog() == DialogResult.OK)
+                {
+                    int collectionId = frmSelect.SelectedCollectionId;
+
+                    // Gọi Service để thêm công thức vào Collection đã chọn
+                    if (_interactionService.AddRecipeToCollection(collectionId, _recipeId))
+                    {
+                        MessageBox.Show("Đã thêm món ăn vào bộ sưu tập!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Món ăn này đã có trong bộ sưu tập rồi.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)

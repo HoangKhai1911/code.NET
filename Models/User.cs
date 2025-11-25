@@ -14,6 +14,8 @@ namespace WinCook.Models
     {
         public int UserId { get; set; }
         public string Username { get; set; }
+        public string FullName { get; set; } // Tên hiển thị (Mới thêm)
         public string Email { get; set; }
+        public string AvatarUrl { get; set; } // Add this property
     }
 }
