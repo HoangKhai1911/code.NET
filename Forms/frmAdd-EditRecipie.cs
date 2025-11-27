@@ -131,6 +131,7 @@ namespace WinCook
         /// </summary>
         private void guna2Button1_Click(object sender, EventArgs e)
         {
+            // 1. Validate cơ bản
             string title = guna2TextBox1.Text.Trim();
             if (string.IsNullOrEmpty(title))
             {
@@ -138,41 +139,67 @@ namespace WinCook
                 return;
             }
 
-            // Sao chép ảnh vào thư mục /Images (Giữ nguyên logic của bạn)
-            string savedImagePath = null;
+            // 2. Xử lý Category
+            // Nếu chọn mục đầu tiên "(Chọn danh mục)" hoặc để trống -> Gán null hoặc mặc định "Khác"
+            string categoryName = comboBox2.Text.Trim();
+            if (comboBox2.SelectedIndex == 0 || string.IsNullOrEmpty(categoryName))
+            {
+                categoryName = "Khác"; // Hoặc null tùy bạn
+            }
+
+            // 3. Xử lý Ảnh (Quan trọng)
+            string finalImagePath = null;
+
+            // Kiểm tra Tag (Nơi lưu đường dẫn ảnh gốc khi chọn file mới hoặc load từ DB)
             if (guna2PictureBox1.Tag != null)
             {
-                string src = guna2PictureBox1.Tag.ToString();
-                if (!string.IsNullOrEmpty(src) && File.Exists(src)) // Kiểm tra kỹ hơn
-                {
-                    string destFolder = Path.Combine(Application.StartupPath, "Images");
-                    Directory.CreateDirectory(destFolder);
-                    // Tạo tên file duy nhất (để tránh trùng lặp)
-                    string destFileName = Guid.NewGuid().ToString() + Path.GetExtension(src);
-                    string dest = Path.Combine(destFolder, destFileName);
+                string sourcePath = guna2PictureBox1.Tag.ToString();
 
-                    File.Copy(src, dest, true);
-                    savedImagePath = dest; // Lưu đường dẫn đã copy
+                // Trường hợp 1: Ảnh đã nằm trong thư mục ứng dụng (Do load từ DB khi Sửa)
+                if (sourcePath.Contains(Application.StartupPath))
+                {
+                    finalImagePath = sourcePath; // Giữ nguyên
+                }
+                // Trường hợp 2: Ảnh mới chọn từ máy tính (Cần copy vào)
+                else if (File.Exists(sourcePath))
+                {
+                    try
+                    {
+                        string destFolder = Path.Combine(Application.StartupPath, "Images");
+                        if (!Directory.Exists(destFolder)) Directory.CreateDirectory(destFolder);
+
+                        // Tạo tên file duy nhất
+                        string destFileName = Guid.NewGuid().ToString() + Path.GetExtension(sourcePath);
+                        string destPath = Path.Combine(destFolder, destFileName);
+
+                        File.Copy(sourcePath, destPath, true);
+                        finalImagePath = destPath;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Lỗi khi lưu ảnh: " + ex.Message);
+                        // Nếu lỗi copy, vẫn cho lưu công thức nhưng không có ảnh
+                    }
                 }
             }
 
-            // Tạo đối tượng Recipe (Model)
+            // 4. Tạo đối tượng Recipe
             Recipe recipe = new Recipe
             {
-                UserId = currentUserId, // Lấy từ AuthManager
+                UserId = currentUserId,
                 Title = title,
                 TimeNeeded = guna2TextBox2.Text.Trim(),
                 Difficulty = comboBox1.Text,
-                CategoryName = comboBox2.Text, // Gửi tên (SP 'AddRecipe' sẽ xử lý)
-                Ingredients = richTextBox1.Text.Trim(), // Khớp CSDL
-                Steps = richTextBox2.Text.Trim(),       // Khớp CSDL
-                ImageUrl = savedImagePath
+                CategoryName = categoryName,
+                Ingredients = richTextBox1.Text.Trim(),
+                Steps = richTextBox2.Text.Trim(),
+                ImageUrl = finalImagePath
             };
 
-            bool success;
-
+            // 5. Gọi Service
             try
             {
+                bool success;
                 if (recipeId == null)
                 {
                     // ➕ Thêm mới
@@ -187,12 +214,14 @@ namespace WinCook
 
                 if (success)
                 {
-                    MessageBox.Show(recipeId == null ? "Đã thêm công thức thành công!" : "Đã cập nhật công thức!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    this.Close(); // Đóng form
+                    MessageBox.Show(recipeId == null ? "Đã thêm công thức thành công!" : "Đã cập nhật công thức!",
+                                    "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    this.DialogResult = DialogResult.OK; // Báo cho form cha biết để reload list
+                    this.Close();
                 }
                 else
                 {
-                    MessageBox.Show("Đã xảy ra lỗi khi lưu công thức.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Đã xảy ra lỗi khi lưu vào cơ sở dữ liệu.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)

@@ -69,11 +69,11 @@ namespace WinCook
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges38 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges39 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges40 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMyRecipes));
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges41 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges42 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges43 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges44 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMyRecipes));
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges45 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges46 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges47 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
@@ -86,10 +86,6 @@ namespace WinCook
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges54 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges55 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges56 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges57 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges58 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges59 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges60 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             guna2GradientPanel1 = new Guna.UI2.WinForms.Guna2GradientPanel();
             guna2ControlBox14 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2ControlBox12 = new Guna.UI2.WinForms.Guna2ControlBox();
@@ -106,8 +102,6 @@ namespace WinCook
             guna2ControlBox3 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2ControlBox2 = new Guna.UI2.WinForms.Guna2ControlBox();
             guna2ControlBox1 = new Guna.UI2.WinForms.Guna2ControlBox();
-            guna2Button8 = new Guna.UI2.WinForms.Guna2Button();
-            guna2Button7 = new Guna.UI2.WinForms.Guna2Button();
             guna2Button6 = new Guna.UI2.WinForms.Guna2Button();
             guna2TextBox1 = new Guna.UI2.WinForms.Guna2TextBox();
             label1 = new Label();
@@ -423,48 +417,10 @@ namespace WinCook
             guna2ControlBox1.Size = new Size(28, 25);
             guna2ControlBox1.TabIndex = 6;
             // 
-            // guna2Button8
-            // 
-            guna2Button8.BorderRadius = 20;
-            guna2Button8.CustomizableEdges = customizableEdges33;
-            guna2Button8.DisabledState.BorderColor = Color.DarkGray;
-            guna2Button8.DisabledState.CustomBorderColor = Color.DarkGray;
-            guna2Button8.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
-            guna2Button8.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
-            guna2Button8.FillColor = Color.Brown;
-            guna2Button8.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            guna2Button8.ForeColor = Color.White;
-            guna2Button8.Location = new Point(775, 118);
-            guna2Button8.Name = "guna2Button8";
-            guna2Button8.ShadowDecoration.CustomizableEdges = customizableEdges34;
-            guna2Button8.Size = new Size(142, 43);
-            guna2Button8.TabIndex = 51;
-            guna2Button8.Text = "Delete";
-            guna2Button8.Click += guna2Button8_Click;
-            // 
-            // guna2Button7
-            // 
-            guna2Button7.BorderRadius = 20;
-            guna2Button7.CustomizableEdges = customizableEdges35;
-            guna2Button7.DisabledState.BorderColor = Color.DarkGray;
-            guna2Button7.DisabledState.CustomBorderColor = Color.DarkGray;
-            guna2Button7.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
-            guna2Button7.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
-            guna2Button7.FillColor = Color.YellowGreen;
-            guna2Button7.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            guna2Button7.ForeColor = Color.White;
-            guna2Button7.Location = new Point(621, 118);
-            guna2Button7.Name = "guna2Button7";
-            guna2Button7.ShadowDecoration.CustomizableEdges = customizableEdges36;
-            guna2Button7.Size = new Size(142, 43);
-            guna2Button7.TabIndex = 50;
-            guna2Button7.Text = "Add";
-            guna2Button7.Click += guna2Button7_Click;
-            // 
             // guna2Button6
             // 
             guna2Button6.BorderRadius = 20;
-            guna2Button6.CustomizableEdges = customizableEdges37;
+            guna2Button6.CustomizableEdges = customizableEdges33;
             guna2Button6.DisabledState.BorderColor = Color.DarkGray;
             guna2Button6.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button6.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -474,7 +430,7 @@ namespace WinCook
             guna2Button6.ForeColor = Color.White;
             guna2Button6.Location = new Point(321, 125);
             guna2Button6.Name = "guna2Button6";
-            guna2Button6.ShadowDecoration.CustomizableEdges = customizableEdges38;
+            guna2Button6.ShadowDecoration.CustomizableEdges = customizableEdges34;
             guna2Button6.Size = new Size(113, 36);
             guna2Button6.TabIndex = 49;
             guna2Button6.Text = "Search";
@@ -484,7 +440,7 @@ namespace WinCook
             // 
             guna2TextBox1.BackColor = Color.Snow;
             guna2TextBox1.BorderRadius = 30;
-            guna2TextBox1.CustomizableEdges = customizableEdges39;
+            guna2TextBox1.CustomizableEdges = customizableEdges35;
             guna2TextBox1.DefaultText = "";
             guna2TextBox1.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
             guna2TextBox1.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
@@ -498,7 +454,7 @@ namespace WinCook
             guna2TextBox1.Name = "guna2TextBox1";
             guna2TextBox1.PlaceholderText = "";
             guna2TextBox1.SelectedText = "";
-            guna2TextBox1.ShadowDecoration.CustomizableEdges = customizableEdges40;
+            guna2TextBox1.ShadowDecoration.CustomizableEdges = customizableEdges36;
             guna2TextBox1.Size = new Size(295, 45);
             guna2TextBox1.TabIndex = 48;
             guna2TextBox1.TextChanged += guna2TextBox1_TextChanged;
@@ -568,7 +524,7 @@ namespace WinCook
             // guna2Button1
             // 
             guna2Button1.BorderRadius = 20;
-            guna2Button1.CustomizableEdges = customizableEdges41;
+            guna2Button1.CustomizableEdges = customizableEdges37;
             guna2Button1.DisabledState.BorderColor = Color.DarkGray;
             guna2Button1.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button1.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -578,7 +534,7 @@ namespace WinCook
             guna2Button1.ForeColor = Color.White;
             guna2Button1.Location = new Point(89, 127);
             guna2Button1.Name = "guna2Button1";
-            guna2Button1.ShadowDecoration.CustomizableEdges = customizableEdges42;
+            guna2Button1.ShadowDecoration.CustomizableEdges = customizableEdges38;
             guna2Button1.Size = new Size(77, 32);
             guna2Button1.TabIndex = 61;
             guna2Button1.Text = "Edit";
@@ -587,7 +543,7 @@ namespace WinCook
             // guna2Button2
             // 
             guna2Button2.BorderRadius = 20;
-            guna2Button2.CustomizableEdges = customizableEdges43;
+            guna2Button2.CustomizableEdges = customizableEdges39;
             guna2Button2.DisabledState.BorderColor = Color.DarkGray;
             guna2Button2.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button2.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -597,7 +553,7 @@ namespace WinCook
             guna2Button2.ForeColor = Color.White;
             guna2Button2.Location = new Point(172, 127);
             guna2Button2.Name = "guna2Button2";
-            guna2Button2.ShadowDecoration.CustomizableEdges = customizableEdges44;
+            guna2Button2.ShadowDecoration.CustomizableEdges = customizableEdges40;
             guna2Button2.Size = new Size(94, 32);
             guna2Button2.TabIndex = 60;
             guna2Button2.Text = "Delete";
@@ -741,7 +697,7 @@ namespace WinCook
             // guna2Button3
             // 
             guna2Button3.BorderRadius = 20;
-            guna2Button3.CustomizableEdges = customizableEdges45;
+            guna2Button3.CustomizableEdges = customizableEdges41;
             guna2Button3.DisabledState.BorderColor = Color.DarkGray;
             guna2Button3.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button3.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -751,7 +707,7 @@ namespace WinCook
             guna2Button3.ForeColor = Color.White;
             guna2Button3.Location = new Point(172, 127);
             guna2Button3.Name = "guna2Button3";
-            guna2Button3.ShadowDecoration.CustomizableEdges = customizableEdges46;
+            guna2Button3.ShadowDecoration.CustomizableEdges = customizableEdges42;
             guna2Button3.Size = new Size(94, 32);
             guna2Button3.TabIndex = 60;
             guna2Button3.Text = "Delete";
@@ -760,7 +716,7 @@ namespace WinCook
             // guna2Button4
             // 
             guna2Button4.BorderRadius = 20;
-            guna2Button4.CustomizableEdges = customizableEdges47;
+            guna2Button4.CustomizableEdges = customizableEdges43;
             guna2Button4.DisabledState.BorderColor = Color.DarkGray;
             guna2Button4.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button4.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -770,7 +726,7 @@ namespace WinCook
             guna2Button4.ForeColor = Color.White;
             guna2Button4.Location = new Point(89, 127);
             guna2Button4.Name = "guna2Button4";
-            guna2Button4.ShadowDecoration.CustomizableEdges = customizableEdges48;
+            guna2Button4.ShadowDecoration.CustomizableEdges = customizableEdges44;
             guna2Button4.Size = new Size(77, 32);
             guna2Button4.TabIndex = 59;
             guna2Button4.Text = "Edit";
@@ -908,7 +864,7 @@ namespace WinCook
             // guna2Button5
             // 
             guna2Button5.BorderRadius = 20;
-            guna2Button5.CustomizableEdges = customizableEdges49;
+            guna2Button5.CustomizableEdges = customizableEdges45;
             guna2Button5.DisabledState.BorderColor = Color.DarkGray;
             guna2Button5.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button5.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -918,7 +874,7 @@ namespace WinCook
             guna2Button5.ForeColor = Color.White;
             guna2Button5.Location = new Point(172, 127);
             guna2Button5.Name = "guna2Button5";
-            guna2Button5.ShadowDecoration.CustomizableEdges = customizableEdges50;
+            guna2Button5.ShadowDecoration.CustomizableEdges = customizableEdges46;
             guna2Button5.Size = new Size(94, 32);
             guna2Button5.TabIndex = 60;
             guna2Button5.Text = "Delete";
@@ -927,7 +883,7 @@ namespace WinCook
             // guna2Button9
             // 
             guna2Button9.BorderRadius = 20;
-            guna2Button9.CustomizableEdges = customizableEdges51;
+            guna2Button9.CustomizableEdges = customizableEdges47;
             guna2Button9.DisabledState.BorderColor = Color.DarkGray;
             guna2Button9.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button9.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -937,7 +893,7 @@ namespace WinCook
             guna2Button9.ForeColor = Color.White;
             guna2Button9.Location = new Point(89, 127);
             guna2Button9.Name = "guna2Button9";
-            guna2Button9.ShadowDecoration.CustomizableEdges = customizableEdges52;
+            guna2Button9.ShadowDecoration.CustomizableEdges = customizableEdges48;
             guna2Button9.Size = new Size(77, 32);
             guna2Button9.TabIndex = 59;
             guna2Button9.Text = "Edit";
@@ -1075,7 +1031,7 @@ namespace WinCook
             // guna2Button10
             // 
             guna2Button10.BorderRadius = 20;
-            guna2Button10.CustomizableEdges = customizableEdges53;
+            guna2Button10.CustomizableEdges = customizableEdges49;
             guna2Button10.DisabledState.BorderColor = Color.DarkGray;
             guna2Button10.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button10.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -1085,7 +1041,7 @@ namespace WinCook
             guna2Button10.ForeColor = Color.White;
             guna2Button10.Location = new Point(172, 127);
             guna2Button10.Name = "guna2Button10";
-            guna2Button10.ShadowDecoration.CustomizableEdges = customizableEdges54;
+            guna2Button10.ShadowDecoration.CustomizableEdges = customizableEdges50;
             guna2Button10.Size = new Size(94, 32);
             guna2Button10.TabIndex = 60;
             guna2Button10.Text = "Delete";
@@ -1094,7 +1050,7 @@ namespace WinCook
             // guna2Button11
             // 
             guna2Button11.BorderRadius = 20;
-            guna2Button11.CustomizableEdges = customizableEdges55;
+            guna2Button11.CustomizableEdges = customizableEdges51;
             guna2Button11.DisabledState.BorderColor = Color.DarkGray;
             guna2Button11.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button11.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -1104,7 +1060,7 @@ namespace WinCook
             guna2Button11.ForeColor = Color.White;
             guna2Button11.Location = new Point(89, 127);
             guna2Button11.Name = "guna2Button11";
-            guna2Button11.ShadowDecoration.CustomizableEdges = customizableEdges56;
+            guna2Button11.ShadowDecoration.CustomizableEdges = customizableEdges52;
             guna2Button11.Size = new Size(77, 32);
             guna2Button11.TabIndex = 59;
             guna2Button11.Text = "Edit";
@@ -1242,7 +1198,7 @@ namespace WinCook
             // guna2Button12
             // 
             guna2Button12.BorderRadius = 20;
-            guna2Button12.CustomizableEdges = customizableEdges57;
+            guna2Button12.CustomizableEdges = customizableEdges53;
             guna2Button12.DisabledState.BorderColor = Color.DarkGray;
             guna2Button12.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button12.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -1252,7 +1208,7 @@ namespace WinCook
             guna2Button12.ForeColor = Color.White;
             guna2Button12.Location = new Point(172, 127);
             guna2Button12.Name = "guna2Button12";
-            guna2Button12.ShadowDecoration.CustomizableEdges = customizableEdges58;
+            guna2Button12.ShadowDecoration.CustomizableEdges = customizableEdges54;
             guna2Button12.Size = new Size(94, 32);
             guna2Button12.TabIndex = 60;
             guna2Button12.Text = "Delete";
@@ -1261,7 +1217,7 @@ namespace WinCook
             // guna2Button13
             // 
             guna2Button13.BorderRadius = 20;
-            guna2Button13.CustomizableEdges = customizableEdges59;
+            guna2Button13.CustomizableEdges = customizableEdges55;
             guna2Button13.DisabledState.BorderColor = Color.DarkGray;
             guna2Button13.DisabledState.CustomBorderColor = Color.DarkGray;
             guna2Button13.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -1271,7 +1227,7 @@ namespace WinCook
             guna2Button13.ForeColor = Color.White;
             guna2Button13.Location = new Point(89, 127);
             guna2Button13.Name = "guna2Button13";
-            guna2Button13.ShadowDecoration.CustomizableEdges = customizableEdges60;
+            guna2Button13.ShadowDecoration.CustomizableEdges = customizableEdges56;
             guna2Button13.Size = new Size(77, 32);
             guna2Button13.TabIndex = 59;
             guna2Button13.Text = "Edit";
@@ -1397,8 +1353,6 @@ namespace WinCook
             Controls.Add(button1);
             Controls.Add(flowLayoutPanel1);
             Controls.Add(panel13);
-            Controls.Add(guna2Button8);
-            Controls.Add(guna2Button7);
             Controls.Add(guna2Button6);
             Controls.Add(guna2TextBox1);
             Controls.Add(label1);
@@ -1450,8 +1404,6 @@ namespace WinCook
         private Guna.UI2.WinForms.Guna2ControlBox guna2ControlBox1;
         private Guna.UI2.WinForms.Guna2ControlBox guna2ControlBox14;
         private Guna.UI2.WinForms.Guna2ControlBox guna2ControlBox15;
-        private Guna.UI2.WinForms.Guna2Button guna2Button8;
-        private Guna.UI2.WinForms.Guna2Button guna2Button7;
         private Guna.UI2.WinForms.Guna2Button guna2Button6;
         private Guna.UI2.WinForms.Guna2TextBox guna2TextBox1;
         private Label label1;

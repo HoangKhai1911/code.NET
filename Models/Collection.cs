@@ -19,6 +19,7 @@ namespace WinCook.Models
 
         // Bổ sung: Danh sách các công thức (dùng để hiển thị)
         public List<Recipe> Recipes { get; set; }
+        public int RecipeCount { get; internal set; }
 
         public Collection()
         {

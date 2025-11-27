@@ -1,11 +1,11 @@
-﻿//Forms/frmCollection.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using WinCook.Models;   // <-- THÊM
-using WinCook.Services; // <-- THÊM
-using Microsoft.VisualBasic; // <-- THÊM (Để dùng InputBox)
+using WinCook.Models;   // Đảm bảo Model
+using WinCook.Services; // Đảm bảo Service
+using WinCook.Controls; // Đảm bảo UserControl
+using Microsoft.VisualBasic; // Dùng cho InputBox
 
 namespace WinCook
 {
@@ -14,9 +14,9 @@ namespace WinCook
         // === KHAI BÁO SERVICE (NHÓM B) ===
         private readonly InteractionService _interactionService;
         private readonly int _currentUserId;
-        
-        // SỬA LỖI CS0104: Chỉ định rõ WinCook.Models.Collection
-        private List<WinCook.Models.Collection> _allUserCollections; // Biến lưu trữ danh sách
+
+        // SỬA LỖI CS0104: Chỉ định rõ namespace WinCook.Models
+        private List<WinCook.Models.Collection> _allUserCollections;
 
         public frmCollection()
         {
@@ -26,210 +26,247 @@ namespace WinCook
             _interactionService = new InteractionService();
 
             // Lấy ID người dùng
-            if (AuthManager.IsLoggedIn)
+            if (AuthManager.IsLoggedIn && AuthManager.CurrentUser != null)
             {
                 _currentUserId = AuthManager.CurrentUser.UserId;
             }
             else
             {
-                // (Xử lý nếu chưa đăng nhập)
-                MessageBox.Show("Vui lòng đăng nhập.");
+                MessageBox.Show("Vui lòng đăng nhập để xem Bộ sưu tập.");
                 this.Close();
                 return;
             }
-            
-            // SỬA LỖI CS0104: Chỉ định rõ WinCook.Models.Collection
+
             _allUserCollections = new List<WinCook.Models.Collection>();
 
-            // === SỬA LỖI DESIGNER (CS0103) ===
-            // Gán sự kiện thủ công (bỏ qua file Designer)
-            //guna2Button1.Click += guna2Button1_Click; // Home
-            //guna2Button3.Click += guna2Button3_Click; // Recipes
-            //guna2Button5.Click += guna2Button5_Click; // Favorites
-            //guna2Button2.Click += guna2Button2_Click; // Collections (hiện tại)
-            //guna2Button4.Click += guna2Button4_Click; // Profiles
-            //guna2Button6.Click += guna2Button6_Click; // Search
-            //guna2Button7.Click += guna2Button7_Click; // Add
-            //guna2Button8.Click += guna2Button8_Click; // Delete
+            // Gán sự kiện Load
+            this.Load += frmCollection_Load;
+
+            // Gán sự kiện FormClosing để điều hướng về Home
+            this.FormClosing += FrmCollection_FormClosing;
         }
 
         private void frmCollection_Load(object sender, EventArgs e)
         {
-            // Tải danh sách Collections khi form được mở
             LoadCollections();
         }
 
         #region === Logic Chính (Nhóm B) ===
 
         /// <summary>
-        /// (Nhóm B) Tải tất cả Collection của user từ Service
+        /// Tải tất cả Collection của user từ Service
         /// </summary>
         private void LoadCollections()
         {
-            // Gọi Service
-            _allUserCollections = _interactionService.GetUserCollections(_currentUserId);
-            
-            // Hiển thị
-            PopulateCollectionList(_allUserCollections);
+            try
+            {
+                // Gọi Service lấy danh sách mới nhất
+                _allUserCollections = _interactionService.GetUserCollections(_currentUserId);
+
+                // Hiển thị lên FlowLayoutPanel
+                PopulateCollectionList(_allUserCollections);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi tải bộ sưu tập: " + ex.Message);
+            }
         }
 
         /// <summary>
-        // SỬA LỖI CS0104: Chỉ định rõ WinCook.Models.Collection
+        /// Đổ danh sách vào FlowLayoutPanel sử dụng ucCollection
         /// </summary>
         private void PopulateCollectionList(List<WinCook.Models.Collection> collections)
         {
-            flowLayoutPanel1.Controls.Clear(); // Xóa thẻ cũ
+            // 1. Xóa thẻ cũ
+            flowLayoutPanel1.Controls.Clear();
 
+            // 2. Kiểm tra rỗng
             if (collections == null || collections.Count == 0)
             {
-                // (Có thể thêm 1 Label báo "Bạn chưa có bộ sưu tập nào")
+                Label lblEmpty = new Label();
+                lblEmpty.Text = "Bạn chưa có bộ sưu tập nào.\nHãy bấm nút (+) để tạo mới!";
+                lblEmpty.AutoSize = false;
+                lblEmpty.Width = flowLayoutPanel1.Width - 20;
+                lblEmpty.Height = 100;
+                lblEmpty.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+                lblEmpty.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Italic);
+                lblEmpty.ForeColor = System.Drawing.Color.Gray;
+
+                flowLayoutPanel1.Controls.Add(lblEmpty);
                 return;
             }
 
-            foreach (var collection in collections)
+            // 3. Tạo thẻ ucCollection
+            foreach (var col in collections)
             {
-                // === BẠN CẦN TẠO USER CONTROL 'ucCollectionCard.cs' ===
-                
-                // (Bỏ comment sau khi tạo ucCollectionCard)
-                // ucCollectionCard card = new ucCollectionCard(collection);
-                // 
-                // card.Click += (s, e) => {
-                //    // TODO: Mở form chi tiết bộ sưu tập (frmCollectionDetails)
-                //    // (Form này chưa có, có thể mở frmRecipes đã được lọc?)
-                //    MessageBox.Show("Sẽ mở chi tiết bộ sưu tập: " + collection.Name);
-                // };
-                // 
-                // flowLayoutPanel1.Controls.Add(card);
+                // === SỬ DỤNG ucCollection ===
+                ucCollection card = new ucCollection(col);
+                card.Margin = new Padding(15); // Cách xa nhau 1 chút cho thoáng
+
+                // --- XỬ LÝ SỰ KIỆN XÓA ---
+                card.DeleteClicked += (s, e) =>
+                {
+                    var confirm = MessageBox.Show($"Bạn có chắc muốn xóa bộ sưu tập '{col.Name}'?\nCác món ăn bên trong sẽ KHÔNG bị xóa khỏi hệ thống.",
+                                                  "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                    if (confirm == DialogResult.Yes)
+                    {
+                        if (_interactionService.DeleteCollection(col.CollectionId))
+                        {
+                            MessageBox.Show("Đã xóa bộ sưu tập!");
+                            LoadCollections(); // Tải lại danh sách
+                        }
+                        else
+                        {
+                            MessageBox.Show("Lỗi khi xóa.");
+                        }
+                    }
+                };
+
+                // --- XỬ LÝ SỰ KIỆN CLICK (XEM CHI TIẾT) ---
+                card.CollectionClicked += (s, e) =>
+                {
+                    // 1. Khởi tạo form chi tiết, truyền ID và Tên bộ sưu tập
+                    using (var f = new frmCollectionDetails(col.CollectionId, col.Name))
+                    {
+                        // 2. Hiển thị form lên
+                        f.ShowDialog();
+                    }
+                };
+
+                flowLayoutPanel1.Controls.Add(card);
             }
         }
 
         /// <summary>
-        /// (Nhóm B) Lọc danh sách (Nút Search)
-        /// </summary>
-        private void SearchCollections()
-        {
-            string searchTerm = guna2TextBox1.Text.Trim().ToLower(); // Giả định tên ô Search
-
-            if (string.IsNullOrEmpty(searchTerm))
-            {
-                PopulateCollectionList(_allUserCollections); // Hiển thị lại tất cả
-                return;
-            }
-
-            // Lọc danh sách đã tải
-            var filteredList = _allUserCollections
-                .Where(c => c.Name.ToLower().Contains(searchTerm))
-                .ToList();
-            
-            PopulateCollectionList(filteredList);
-        }
-
-        /// <summary>
-        /// (Nhóm B) Thêm Collection mới (Nút Add)
+        /// Thêm Collection mới (Nút Add)
         /// </summary>
         private void AddNewCollection()
         {
-            // Dùng InputBox của VisualBasic (cần 'using Microsoft.VisualBasic;')
-            string newName = Interaction.InputBox("Nhập tên Bộ sưu tập mới:", "Tạo Bộ Sưu Tập", "Ví dụ: Món ăn ngày Tết");
+            // Dùng InputBox của VisualBasic để nhập nhanh tên
+            string newName = Interaction.InputBox("Nhập tên Bộ sưu tập mới:", "Tạo Bộ Sưu Tập", "Món ngon mỗi ngày");
 
             if (string.IsNullOrWhiteSpace(newName))
             {
-                return; // Người dùng hủy
+                return; // Người dùng hủy hoặc không nhập gì
             }
 
-            // Tạo đối tượng mới
-            // SỬA LỖI CS0104: Chỉ định rõ WinCook.Models.Collection
-            WinCook.Models.Collection newCollection = new WinCook.Models.Collection
+            // Tạo đối tượng
+            var newCollection = new WinCook.Models.Collection
             {
                 UserId = _currentUserId,
-                Name = newName,
-                Description = "" // (Có thể thêm 1 ô nhập mô tả sau)
+                Name = newName.Trim(),
+                Description = ""
             };
 
             // Gọi Service
-            bool success = _interactionService.CreateCollection(newCollection);
-
-            if (success)
+            if (_interactionService.CreateCollection(newCollection))
             {
-                MessageBox.Show("Đã tạo Bộ sưu tập thành công!");
-                LoadCollections(); // Tải lại danh sách (để lấy ID mới)
+                MessageBox.Show("Tạo thành công!", "Thông báo");
+                LoadCollections(); // Tải lại để thấy cái mới
             }
             else
             {
-                MessageBox.Show("Lỗi khi tạo Bộ sưu tập.");
+                MessageBox.Show("Lỗi khi tạo. Có thể tên đã tồn tại.");
+            }
+        }
+
+        /// <summary>
+        /// Tìm kiếm bộ sưu tập (Nút Search)
+        /// </summary>
+        private void SearchCollections()
+        {
+            // Giả sử textbox tên là guna2TextBox1
+            string keyword = guna2TextBox1 != null ? guna2TextBox1.Text.Trim().ToLower() : "";
+
+            if (string.IsNullOrEmpty(keyword))
+            {
+                PopulateCollectionList(_allUserCollections);
+            }
+            else
+            {
+                var filtered = _allUserCollections
+                    .Where(c => c.Name.ToLower().Contains(keyword))
+                    .ToList();
+                PopulateCollectionList(filtered);
             }
         }
 
         #endregion
 
-        // Helper dùng chung
+        #region === Điều hướng & Form ===
+
         private void OpenForm(Form f)
         {
             f.Show();
             this.Hide();
         }
 
-        // ===== Thanh menu top trong frmCollection =====
-
-        // Home
-        private void guna2Button1_Click(object sender, EventArgs e)
+        private void FrmCollection_FormClosing(object sender, FormClosingEventArgs e)
         {
-            var f = new frmHomePage();
-            OpenForm(f);
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                var homePage = Application.OpenForms.OfType<frmHomePage>().FirstOrDefault();
+                if (homePage != null) homePage.Show();
+                else
+                {
+                    var login = Application.OpenForms.OfType<frmLogin>().FirstOrDefault();
+                    if (login != null) login.Show();
+                    else new frmLogin().Show();
+                }
+            }
         }
 
-        // Recipes
-        private void guna2Button3_Click(object sender, EventArgs e)
-        {
-            var f = new frmRecipes();
-            OpenForm(f);
-        }
+        // Menu Navigation
+        private void guna2Button1_Click(object sender, EventArgs e) => OpenForm(new frmHomePage());
+        private void guna2Button3_Click(object sender, EventArgs e) => OpenForm(new frmRecipes());
+        private void guna2Button5_Click(object sender, EventArgs e) => OpenForm(new frmMyFavRecipes());
+        private void guna2Button2_Click(object sender, EventArgs e) { } // Đang ở đây
+        private void guna2Button4_Click(object sender, EventArgs e) => OpenForm(new frmProfile());
 
-        // Favorites
-        private void guna2Button5_Click(object sender, EventArgs e)
-        {
-            var f = new frmMyFavRecipes();
-            OpenForm(f);
-        }
+        // Nút Search
+        private void guna2Button6_Click(object sender, EventArgs e) => SearchCollections();
 
-        // Collections (đang ở Collections -> không cần chuyển)
-        private void guna2Button2_Click(object sender, EventArgs e)
-        {
-            // Đã ở Collections, không làm gì
-        }
+        // Nút Add (+)
+        private void guna2Button7_Click(object sender, EventArgs e) => AddNewCollection();
 
-        // Profiles
-        private void guna2Button4_Click(object sender, EventArgs e)
-        {
-            var f = new frmProfile();
-            OpenForm(f);
-        }
-
-        // Các nút Search / Add / Delete
-        // Search
-        private void guna2Button6_Click(object sender, EventArgs e)
-        {
-            // (Đã thêm logic)
-            SearchCollections();
-        }
-
-        // Add
-        private void guna2Button7_Click(object sender, EventArgs e)
-        {
-            // (Đã thêm logic)
-            AddNewCollection();
-        }
-
-        // Delete
+        // Nút Delete (Thùng rác lớn) - Có thể bỏ vì đã có nút xóa trên từng thẻ
         private void guna2Button8_Click(object sender, EventArgs e)
         {
-            // TODO: (Tổng tài audio) Logic Xóa
-            // 1. Cần xác định Collection nào đang được chọn
-            //    (FlowLayoutPanel không hỗ trợ 'SelectedItem' tốt)
-            // 2. Lấy 'collection.CollectionId'
-            // 3. Gọi _interactionService.DeleteCollection(collectionId)
-            // 4. LoadCollections();
-            MessageBox.Show("Chức năng Xóa đang được phát triển!");
-        }
+            // 1. Kiểm tra xem có dữ liệu để xóa không
+            if (_allUserCollections == null || _allUserCollections.Count == 0)
+            {
+                MessageBox.Show("Danh sách trống, không có gì để xóa.", "Thông báo");
+                return;
+            }
+
+            // 2. Hộp thoại xác nhận (Rất quan trọng cho nút Delete All)
+            var result = MessageBox.Show(
+                "CẢNH BÁO: Bạn có chắc chắn muốn xóa TẤT CẢ bộ sưu tập không?\n\nHành động này không thể hoàn tác!",
+                "Xác nhận Xóa Hết",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2); // Mặc định chọn No cho an toàn
+
+            if (result == DialogResult.Yes)
+            {
+                // 3. Gọi Service xóa sạch
+                bool success = _interactionService.DeleteAllUserCollections(_currentUserId);
+
+                if (success)
+                {
+                    MessageBox.Show("Đã xóa toàn bộ bộ sưu tập thành công!", "Thành công");
+
+                    // 4. Tải lại danh sách (lúc này sẽ trống trơn)
+                    LoadCollections();
+                }
+                else
+                {
+                    MessageBox.Show("Có lỗi xảy ra khi xóa dữ liệu.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        } 
+
+        #endregion
     }
 }

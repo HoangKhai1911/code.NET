@@ -409,6 +409,8 @@ namespace WinCook.Services
         /// <summary>
         /// Xóa một công thức. Sử dụng SP 'DeleteRecipe'.
         /// </summary>
+        // Trong WinCook/Services/RecipeService.cs
+
         public bool DeleteRecipe(int recipeId)
         {
             try
@@ -421,21 +423,23 @@ namespace WinCook.Services
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddWithValue("@recipe_id", recipeId);
 
-                        int rowsAffected = cmd.ExecuteNonQuery();
-                        return rowsAffected > 0;
-                        // Do CSDL đã cài đặt ON DELETE CASCADE,
-                        // Ingredients, Steps, Favorites, Ratings, Notes...
-                        // sẽ tự động bị xóa theo. Rất hiệu quả!
+                        // THỰC THI LỆNH
+                        cmd.ExecuteNonQuery();
+
+                        // --- SỬA QUAN TRỌNG TẠI ĐÂY ---
+                        // Vì Procedure có 'SET NOCOUNT ON', nó sẽ trả về -1.
+                        // Đừng kiểm tra > 0 nữa. Chỉ cần không bị lỗi Exception là thành công.
+                        return true;
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Lỗi khi xóa công thức: " + ex.Message);
+                // Hiện lỗi chi tiết để debug nếu có vấn đề khác
+                System.Windows.Forms.MessageBox.Show("Lỗi Service Xóa: " + ex.Message);
                 return false;
             }
         }
-
         #endregion
 
         #region === Tiện ích (Helpers) ===

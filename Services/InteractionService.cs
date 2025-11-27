@@ -111,7 +111,6 @@ namespace WinCook.Services
         public List<Recipe> GetFavoriteRecipes(int userId)
         {
             List<Recipe> recipes = new List<Recipe>();
-            // Câu query này JOIN 5 bảng và dùng View, khá phức tạp
             string query = @"
                 SELECT 
                     r.recipe_id, r.title, r.difficulty, r.time_needed, r.image_url,
@@ -125,7 +124,7 @@ namespace WinCook.Services
                 LEFT JOIN Categories c ON r.category_id = c.category_id
                 LEFT JOIN Recipe_Stats rs ON r.recipe_id = rs.recipe_id
                 WHERE f.user_id = @user_id
-                ORDER BY f.created_at DESC"; // Sắp xếp theo ngày yêu thích
+                ORDER BY f.created_at DESC";
 
             try
             {
@@ -139,8 +138,6 @@ namespace WinCook.Services
                         {
                             while (reader.Read())
                             {
-                                // Chúng ta tái sử dụng hàm Map của RecipeService (nếu có thể)
-                                // Hoặc map thủ công ở đây
                                 recipes.Add(new Recipe
                                 {
                                     RecipeId = Convert.ToInt32(reader["recipe_id"]),
@@ -169,12 +166,8 @@ namespace WinCook.Services
 
         #region === Ratings (Đánh giá & Bình luận) ===
 
-        /// <summary>
-        /// (Nhóm B) Thêm hoặc Cập nhật đánh giá (score + comment) của người dùng cho 1 công thức.
-        /// </summary>
         public bool AddOrUpdateRating(Rating rating)
         {
-            // Logic: Kiểm tra xem đã đánh giá chưa. Nếu rồi thì UPDATE, chưa thì INSERT.
             string queryCheck = "SELECT rating_id FROM Ratings WHERE user_id = @user_id AND recipe_id = @recipe_id";
             string queryInsert = "INSERT INTO Ratings (user_id, recipe_id, score, comment) VALUES (@user_id, @recipe_id, @score, @comment)";
             string queryUpdate = "UPDATE Ratings SET score = @score, comment = @comment, created_at = GETDATE() WHERE rating_id = @rating_id";
@@ -192,16 +185,12 @@ namespace WinCook.Services
                         cmdCheck.Parameters.AddWithValue("@user_id", rating.UserId);
                         cmdCheck.Parameters.AddWithValue("@recipe_id", rating.RecipeId);
                         object result = cmdCheck.ExecuteScalar();
-                        if (result != null)
-                        {
-                            existingRatingId = (int)result;
-                        }
+                        if (result != null) existingRatingId = (int)result;
                     }
 
                     // 2. Quyết định INSERT hay UPDATE
                     if (existingRatingId.HasValue)
                     {
-                        // UPDATE
                         using (SqlCommand cmdUpdate = new SqlCommand(queryUpdate, connection))
                         {
                             cmdUpdate.Parameters.AddWithValue("@score", rating.Score);
@@ -212,7 +201,6 @@ namespace WinCook.Services
                     }
                     else
                     {
-                        // INSERT
                         using (SqlCommand cmdInsert = new SqlCommand(queryInsert, connection))
                         {
                             cmdInsert.Parameters.AddWithValue("@user_id", rating.UserId);
@@ -232,13 +220,9 @@ namespace WinCook.Services
             }
         }
 
-        /// <summary>
-        /// (Nhóm B) Lấy danh sách đánh giá của một công thức (Mới nhất lên đầu).
-        /// </summary>
         public List<Rating> GetRatingsForRecipe(int recipeId)
         {
             List<Rating> ratings = new List<Rating>();
-            // Lấy hết (bỏ TOP 10) để frmRecipeDetails tự xử lý phân trang (nút "Xem thêm")
             string query = @"
                 SELECT r.rating_id, r.user_id, r.recipe_id, r.score, r.comment, r.created_at, u.username
                 FROM Ratings r
@@ -266,7 +250,7 @@ namespace WinCook.Services
                                     Score = (int)reader["score"],
                                     Comment = reader["comment"].ToString(),
                                     CreatedAt = (DateTime)reader["created_at"],
-                                    Username = (string)reader["username"] // Lấy tên người đánh giá
+                                    Username = (string)reader["username"]
                                 });
                             }
                         }
@@ -282,140 +266,44 @@ namespace WinCook.Services
 
         #endregion
 
-        #region === Notes (Ghi chú cá nhân) ===
-
-        /// <summary>
-        /// (Nhóm B) Lấy ghi chú cá nhân của người dùng cho một công thức.
-        /// </summary>
-        public Note GetNote(int userId, int recipeId)
-        {
-            Note note = null;
-            string query = "SELECT note_id, note_text, created_at FROM Notes WHERE user_id = @user_id AND recipe_id = @recipe_id";
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    using (SqlCommand command = new SqlCommand(query, connection))
-                    {
-                        command.Parameters.AddWithValue("@user_id", userId);
-                        command.Parameters.AddWithValue("@recipe_id", recipeId);
-
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                note = new Note
-                                {
-                                    NoteId = (int)reader["note_id"],
-                                    NoteText = (string)reader["note_text"],
-                                    CreatedAt = (DateTime)reader["created_at"],
-                                    UserId = userId,
-                                    RecipeId = recipeId
-                                };
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Lỗi khi lấy Note: " + ex.Message);
-            }
-            return note; // Trả về null nếu không tìm thấy
-        }
-
-        /// <summary>
-        /// (Nhóm B) Thêm hoặc Cập nhật ghi chú cá nhân.
-        /// </summary>
-        public bool AddOrUpdateNote(Note note)
-        {
-            // Logic: Tương tự như Rating, kiểm tra xem Note đã tồn tại chưa
-            string queryCheck = "SELECT note_id FROM Notes WHERE user_id = @user_id AND recipe_id = @recipe_id";
-            string queryInsert = "INSERT INTO Notes (user_id, recipe_id, note_text) VALUES (@user_id, @recipe_id, @note_text)";
-            string queryUpdate = "UPDATE Notes SET note_text = @note_text, created_at = GETDATE() WHERE note_id = @note_id";
-
-            try
-            {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    int? existingNoteId = null;
-
-                    // 1. Kiểm tra
-                    using (SqlCommand cmdCheck = new SqlCommand(queryCheck, connection))
-                    {
-                        cmdCheck.Parameters.AddWithValue("@user_id", note.UserId);
-                        cmdCheck.Parameters.AddWithValue("@recipe_id", note.RecipeId);
-                        object result = cmdCheck.ExecuteScalar();
-                        if (result != null)
-                        {
-                            existingNoteId = (int)result;
-                        }
-                    }
-
-                    // 2. Quyết định INSERT hay UPDATE
-                    if (existingNoteId.HasValue)
-                    {
-                        // UPDATE
-                        using (SqlCommand cmdUpdate = new SqlCommand(queryUpdate, connection))
-                        {
-                            cmdUpdate.Parameters.AddWithValue("@note_text", note.NoteText);
-                            cmdUpdate.Parameters.AddWithValue("@note_id", existingNoteId.Value);
-                            cmdUpdate.ExecuteNonQuery();
-                        }
-                    }
-                    else
-                    {
-                        // INSERT
-                        using (SqlCommand cmdInsert = new SqlCommand(queryInsert, connection))
-                        {
-                            cmdInsert.Parameters.AddWithValue("@user_id", note.UserId);
-                            cmdInsert.Parameters.AddWithValue("@recipe_id", note.RecipeId);
-                            cmdInsert.Parameters.AddWithValue("@note_text", note.NoteText);
-                            cmdInsert.ExecuteNonQuery();
-                        }
-                    }
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Lỗi khi thêm/cập nhật Note: " + ex.Message);
-                return false;
-            }
-        }
-
-        #endregion
-
         #region === Collections (Bộ sưu tập) ===
 
         /// <summary>
-        /// (Nhóm B) Lấy tất cả Bộ sưu tập của một người dùng.
+        /// Lấy danh sách bộ sưu tập của User, kèm số lượng món ăn trong đó.
         /// </summary>
         public List<Collection> GetUserCollections(int userId)
         {
-            List<Collection> collections = new List<Collection>();
-            string query = "SELECT collection_id, name, description, created_at FROM Collections WHERE user_id = @user_id ORDER BY name";
+            var list = new List<Collection>();
             try
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    // Query đếm số bài viết
+                    string query = @"
+                        SELECT c.collection_id, c.name, c.description, c.created_at, 
+                               COUNT(cr.recipe_id) as RecipeCount
+                        FROM Collections c
+                        LEFT JOIN Collection_Recipes cr ON c.collection_id = cr.collection_id
+                        WHERE c.user_id = @uid
+                        GROUP BY c.collection_id, c.name, c.description, c.created_at
+                        ORDER BY c.created_at DESC";
+
+                    using (SqlCommand cmd = new SqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@user_id", userId);
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        cmd.Parameters.AddWithValue("@uid", userId);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                collections.Add(new Collection
+                                list.Add(new Collection
                                 {
                                     CollectionId = (int)reader["collection_id"],
-                                    Name = (string)reader["name"],
-                                    Description = reader["description"].ToString(),
-                                    CreatedAt = (DateTime)reader["created_at"],
-                                    UserId = userId
+                                    UserId = userId,
+                                    Name = reader["name"].ToString(),
+                                    Description = reader["description"]?.ToString(),
+                                    CreatedAt = Convert.ToDateTime(reader["created_at"]),
+                                    RecipeCount = Convert.ToInt32(reader["RecipeCount"])
                                 });
                             }
                         }
@@ -424,42 +312,76 @@ namespace WinCook.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Lỗi khi lấy Collections: " + ex.Message);
+                Console.WriteLine("Lỗi lấy danh sách BST: " + ex.Message);
             }
-            return collections;
+            return list;
         }
 
         /// <summary>
-        /// (Nhóm B) Tạo một Bộ sưu tập mới.
+        /// Tạo bộ sưu tập mới.
         /// </summary>
-        public bool CreateCollection(Collection collection)
+        public bool CreateCollection(Collection col)
         {
-            string query = "INSERT INTO Collections (user_id, name, description) VALUES (@user_id, @name, @description)";
             try
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    // Kiểm tra trùng tên
+                    string check = "SELECT COUNT(*) FROM Collections WHERE user_id = @uid AND name = @name";
+                    using (SqlCommand cmdCheck = new SqlCommand(check, connection))
                     {
-                        command.Parameters.AddWithValue("@user_id", collection.UserId);
-                        command.Parameters.AddWithValue("@name", collection.Name);
-                        command.Parameters.AddWithValue("@description", (object)collection.Description ?? DBNull.Value);
+                        cmdCheck.Parameters.AddWithValue("@uid", col.UserId);
+                        cmdCheck.Parameters.AddWithValue("@name", col.Name);
+                        if ((int)cmdCheck.ExecuteScalar() > 0) return false; // Đã tồn tại
+                    }
 
-                        int rowsAffected = command.ExecuteNonQuery();
-                        return rowsAffected > 0;
+                    string query = "INSERT INTO Collections (user_id, name, description) VALUES (@uid, @name, @desc)";
+                    using (SqlCommand cmd = new SqlCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@uid", col.UserId);
+                        cmd.Parameters.AddWithValue("@name", col.Name);
+                        cmd.Parameters.AddWithValue("@desc", col.Description ?? "");
+                        return cmd.ExecuteNonQuery() > 0;
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Lỗi khi tạo Collection: " + ex.Message);
-                return false;
-            }
+            catch { return false; }
         }
 
         /// <summary>
-        /// (Nhóm B) Thêm một công thức vào một Bộ sưu tập.
+        /// Xóa bộ sưu tập.
+        /// </summary>
+        public bool DeleteCollection(int collectionId)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    // 1. Xóa liên kết món ăn trước (để sạch dữ liệu)
+                    string delLinks = "DELETE FROM Collection_Recipes WHERE collection_id = @id";
+                    using (SqlCommand cmd1 = new SqlCommand(delLinks, connection))
+                    {
+                        cmd1.Parameters.AddWithValue("@id", collectionId);
+                        cmd1.ExecuteNonQuery();
+                    }
+
+                    // 2. Xóa collection
+                    string query = "DELETE FROM Collections WHERE collection_id = @id";
+                    using (SqlCommand cmd = new SqlCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@id", collectionId);
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch { return false; }
+        }
+
+        /// <summary>
+        /// Thêm một công thức vào một Bộ sưu tập.
         /// </summary>
         public bool AddRecipeToCollection(int collectionId, int recipeId)
         {
@@ -474,17 +396,107 @@ namespace WinCook.Services
                         command.Parameters.AddWithValue("@collection_id", collectionId);
                         command.Parameters.AddWithValue("@recipe_id", recipeId);
 
-                        int rowsAffected = command.ExecuteNonQuery();
-                        return rowsAffected > 0;
+                        return command.ExecuteNonQuery() > 0;
                     }
                 }
             }
             catch (Exception ex)
             {
-                // Có thể lỗi do đã tồn tại (vi phạm Primary Key)
                 Console.WriteLine("Lỗi khi thêm Recipe vào Collection: " + ex.Message);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Xóa TẤT CẢ bộ sưu tập của một người dùng.
+        /// </summary>
+        public bool DeleteAllUserCollections(int userId)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    // Vì trong SQL bảng Collection_Recipes đã có ON DELETE CASCADE
+                    // Nên chỉ cần xóa ở bảng Collections là các liên kết sẽ tự bay màu.
+                    string query = "DELETE FROM Collections WHERE user_id = @uid";
+
+                    using (SqlCommand cmd = new SqlCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@uid", userId);
+                        // ExecuteNonQuery trả về số dòng bị xóa.
+                        // Nếu >= 0 nghĩa là lệnh chạy thành công (dù không có gì để xóa vẫn là thành công)
+                        cmd.ExecuteNonQuery();
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi xóa tất cả BST: " + ex.Message);
+                return false;
+            }
+        }
+
+        // Trong Services/InteractionService.cs
+
+        /// <summary>
+        /// Lấy danh sách các món ăn nằm trong một Bộ sưu tập cụ thể.
+        /// </summary>
+        public List<Recipe> GetRecipesInCollection(int collectionId)
+        {
+            List<Recipe> recipes = new List<Recipe>();
+
+            // JOIN bảng Recipes với Collection_Recipes
+            string query = @"
+        SELECT 
+            r.recipe_id, r.title, r.difficulty, r.time_needed, r.image_url,
+            u.username AS AuthorName, 
+            c.name AS CategoryName,
+            ISNULL(rs.total_favorites, 0) AS TotalFavorites,
+            ISNULL(rs.avg_rating, 0) AS AverageRating
+        FROM Recipes r
+        JOIN Collection_Recipes cr ON r.recipe_id = cr.recipe_id
+        JOIN Users u ON r.user_id = u.user_id
+        LEFT JOIN Categories c ON r.category_id = c.category_id
+        LEFT JOIN Recipe_Stats rs ON r.recipe_id = rs.recipe_id
+        WHERE cr.collection_id = @colId
+        ORDER BY r.created_at DESC";
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@colId", collectionId);
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                recipes.Add(new Recipe
+                                {
+                                    RecipeId = Convert.ToInt32(reader["recipe_id"]),
+                                    Title = reader["title"].ToString(),
+                                    Difficulty = reader["difficulty"].ToString(),
+                                    TimeNeeded = reader["time_needed"].ToString(),
+                                    ImageUrl = reader["image_url"].ToString(),
+                                    AuthorName = reader["AuthorName"].ToString(),
+                                    CategoryName = reader["CategoryName"].ToString(),
+                                    TotalFavorites = Convert.ToInt32(reader["TotalFavorites"]),
+                                    AverageRating = Convert.ToDouble(reader["AverageRating"])
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi lấy món trong BST: " + ex.Message);
+            }
+            return recipes;
         }
 
         #endregion

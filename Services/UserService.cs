@@ -157,25 +157,29 @@ namespace WinCook.Services
             }
         }
 
+        // ... (Các using giữ nguyên)
+
         public bool UpdateUserAvatar(int userId, string avatarPath)
         {
             try
             {
-                using (var conn = new System.Data.SqlClient.SqlConnection(DBHelper.ConnectionString))
+                using (var conn = new SqlConnection(connectionString))
                 {
                     conn.Open();
-                    // Cập nhật đường dẫn ảnh vào bảng Users
-                    string query = "UPDATE Users SET AvatarUrl = @Path WHERE UserId = @Id";
+                    // Cập nhật đường dẫn ảnh
+                    string query = "UPDATE Users SET AvatarUrl = @Path WHERE user_id = @Id";
 
-                    using (var cmd = new System.Data.SqlClient.SqlCommand(query, conn))
+                    using (var cmd = new SqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@Path", avatarPath);
+                        // Xử lý null an toàn
+                        cmd.Parameters.AddWithValue("@Path", (object)avatarPath ?? DBNull.Value);
                         cmd.Parameters.AddWithValue("@Id", userId);
 
                         int rows = cmd.ExecuteNonQuery();
+
+                        // Nếu update thành công -> Cập nhật luôn bộ nhớ đệm AuthManager
                         if (rows > 0)
                         {
-                            // Cập nhật luôn vào Session hiện tại để hiển thị ngay
                             if (AuthManager.CurrentUser != null)
                                 AuthManager.CurrentUser.AvatarUrl = avatarPath;
                             return true;
@@ -185,32 +189,34 @@ namespace WinCook.Services
             }
             catch (Exception ex)
             {
-                // Log lỗi nếu cần
-                Console.WriteLine("Lỗi Update Avatar: " + ex.Message);
+                // QUAN TRỌNG: Hiện lỗi ra để biết sai ở đâu
+                MessageBox.Show("Lỗi SQL Update Avatar: " + ex.Message);
             }
             return false;
         }
 
-        // Bạn cũng cần thêm hàm UpdateUserProfile nếu chưa có (để sửa tên/email)
-        public bool UpdateUserProfile(int userId, string newFullName, string newEmail)
+        public bool UpdateUserProfile(int userId, string newFullName, string newEmail, string phone)
         {
             try
             {
                 using (var conn = new SqlConnection(connectionString))
                 {
                     conn.Open();
-                    // CHỈ UPDATE FullName VÀ Email. KHÔNG ĐỤNG ĐẾN Username.
-                    string query = "UPDATE Users SET FullName = @Name, Email = @Email WHERE UserId = @Id";
+                    // Cập nhật Tên hiển thị (FullName) và Email
+                    // Lưu ý: Kiểm tra kỹ tên bảng là 'Users' và tên cột ID là 'user_id'
+                    string query = "UPDATE Users SET FullName = @Name, Email = @Email WHERE user_id = @Id";
 
                     using (var cmd = new SqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@Name", newFullName); // Lưu tên hiển thị mới
-                        cmd.Parameters.AddWithValue("@Email", newEmail);
+                        cmd.Parameters.AddWithValue("@Name", (object)newFullName ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Email", (object)newEmail ?? DBNull.Value);
                         cmd.Parameters.AddWithValue("@Id", userId);
 
-                        if (cmd.ExecuteNonQuery() > 0)
+                        int rows = cmd.ExecuteNonQuery();
+
+                        // Nếu update thành công -> Cập nhật luôn bộ nhớ đệm AuthManager
+                        if (rows > 0)
                         {
-                            // Cập nhật Session
                             if (AuthManager.CurrentUser != null)
                             {
                                 AuthManager.CurrentUser.FullName = newFullName;
@@ -223,7 +229,8 @@ namespace WinCook.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Lỗi Update Profile: " + ex.Message);
+                // QUAN TRỌNG: Hiện lỗi ra để biết sai ở đâu
+                MessageBox.Show("Lỗi SQL Update Profile: " + ex.Message);
             }
             return false;
         }

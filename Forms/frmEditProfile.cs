@@ -58,7 +58,7 @@ namespace WinCook.Forms
 
             // 3. Gọi Service cập nhật
             // Lưu ý: Tham số thứ 4 là số điện thoại, tạm thời để trống ""
-            bool isUpdated = _userService.UpdateUserProfile(_userId, newName, newEmail);
+            bool isUpdated = _userService.UpdateUserProfile(_userId, newName, newEmail, "");
 
             if (isUpdated)
             {

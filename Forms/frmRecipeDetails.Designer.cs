@@ -581,9 +581,8 @@ namespace WinCook
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             AutoScroll = true;
-            AutoSize = true;
             BackColor = Color.SeaShell;
-            ClientSize = new Size(931, 538);
+            ClientSize = new Size(958, 538);
             Controls.Add(guna2TextBox1);
             Controls.Add(button2);
             Controls.Add(button1);
